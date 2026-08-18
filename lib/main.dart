@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // <--- THIS is the missing import!
+import 'providers/booking_provider.dart';
 import 'Screens/splash_screen.dart';
 import 'app_colours.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    // Wrap MyApp with ChangeNotifierProvider at the root level
+    ChangeNotifierProvider(
+      create: (context) => BookingProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -12,22 +20,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false, // Removes the 'Debug' banner in the top corner
+      debugShowCheckedModeBanner: false,
       title: 'April Farm',
       
-      // Global App Theme Configuration
+      // Everything you and ChatGPT built stays EXACTLY as it is!
       theme: ThemeData(
         scaffoldBackgroundColor: AppColors.background,
         primaryColor: AppColors.primaryOrange,
-        
-        // Sets the default dark color scheme for the entire app
         colorScheme: const ColorScheme.dark(
           primary: AppColors.primaryOrange,
           surface: AppColors.cardSurface,
-          
         ),
-        
-        // Customizes app bar styling across all screens
         appBarTheme: const AppBarTheme(
           backgroundColor: AppColors.background,
           elevation: 0,
@@ -41,7 +44,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       
-      // The entry screen when the app opens
+      // Your entry screen remains untouched
       home: const SplashScreen(),
     );
   }

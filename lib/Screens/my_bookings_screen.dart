@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../app_colours.dart';
+import '../providers/booking_provider.dart';
 
 class MyBookingsScreen extends StatefulWidget {
   const MyBookingsScreen({super.key});
@@ -10,37 +12,6 @@ class MyBookingsScreen extends StatefulWidget {
 
 class _MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
-  // Mock data for upcoming & past bookings
-  final List<Map<String, String>> _upcomingBookings = [
-    {
-      'service': 'Arena Hire',
-      'date': 'Wed, 19 Aug 2026',
-      'time': '10:00 AM - 10:50 AM',
-      'arena': 'Outdoor Arena',
-      'status': 'Confirmed',
-      'payment': 'Paid',
-    },
-    {
-      'service': 'Private Lesson',
-      'date': 'Fri, 21 Aug 2026',
-      'time': '02:00 PM - 02:50 PM',
-      'arena': 'Indoor Arena',
-      'status': 'Confirmed',
-      'payment': 'Invoice Pending',
-    },
-  ];
-
-  final List<Map<String, String>> _pastBookings = [
-    {
-      'service': 'Group Lesson',
-      'date': 'Mon, 10 Aug 2026',
-      'time': '09:00 AM - 09:50 AM',
-      'arena': 'Dressage Ring',
-      'status': 'Completed',
-      'payment': 'Paid',
-    },
-  ];
 
   @override
   void initState() {
@@ -56,6 +27,10 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
+    // Listen directly to BookingProvider updates
+    final bookingProvider = Provider.of<BookingProvider>(context);
+    final upcomingBookings = bookingProvider.upcomingBookings;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -83,18 +58,23 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPr
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildBookingList(_upcomingBookings, isUpcoming: true),
-          _buildBookingList(_pastBookings, isUpcoming: false),
+          _buildUpcomingList(context, upcomingBookings),
+          const Center(
+            child: Text(
+              'No past sessions yet',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildBookingList(List<Map<String, String>> bookings, {required bool isUpcoming}) {
+  Widget _buildUpcomingList(BuildContext context, List<BookingModel> bookings) {
     if (bookings.isEmpty) {
       return const Center(
         child: Text(
-          'No bookings found',
+          'No upcoming bookings found',
           style: TextStyle(color: AppColors.textSecondary),
         ),
       );
@@ -105,7 +85,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPr
       itemCount: bookings.length,
       itemBuilder: (context, index) {
         final booking = bookings[index];
-        final isPaid = booking['payment'] == 'Paid';
+        final isPaid = booking.payment == 'Paid';
 
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
@@ -121,7 +101,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPr
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    booking['service']!,
+                    booking.service,
                     style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
@@ -137,7 +117,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPr
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      booking['payment']!,
+                      booking.payment,
                       style: TextStyle(
                         color: isPaid ? Colors.green : Colors.orange,
                         fontSize: 12,
@@ -153,7 +133,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPr
                   const Icon(Icons.calendar_today, size: 16, color: AppColors.primaryOrange),
                   const SizedBox(width: 8),
                   Text(
-                    booking['date']!,
+                    booking.date,
                     style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
                   ),
                 ],
@@ -164,7 +144,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPr
                   const Icon(Icons.access_time, size: 16, color: AppColors.primaryOrange),
                   const SizedBox(width: 8),
                   Text(
-                    booking['time']!,
+                    booking.time,
                     style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
                   ),
                 ],
@@ -175,34 +155,36 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPr
                   const Icon(Icons.place, size: 16, color: AppColors.primaryOrange),
                   const SizedBox(width: 8),
                   Text(
-                    booking['arena']!,
+                    booking.arena,
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                   ),
                 ],
               ),
-              if (isUpcoming) ...[
-                const SizedBox(height: 14),
-                OutlinedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Cancellation request sent to owner.'),
-                        backgroundColor: AppColors.primaryOrange,
-                      ),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.5)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 14),
+              OutlinedButton(
+                onPressed: () {
+                  // Remove from Provider on cancel
+                  Provider.of<BookingProvider>(context, listen: false)
+                      .cancelBooking(booking.id);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Booking cancelled.'),
+                      backgroundColor: AppColors.primaryOrange,
                     ),
-                  ),
-                  child: const Text(
-                    'Cancel Booking',
-                    style: TextStyle(color: Colors.redAccent, fontSize: 12),
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.5)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-              ],
+                child: const Text(
+                  'Cancel Booking',
+                  style: TextStyle(color: Colors.redAccent, fontSize: 12),
+                ),
+              ),
             ],
           ),
         );

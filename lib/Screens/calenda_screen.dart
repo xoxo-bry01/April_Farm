@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../app_colours.dart';
+import 'package:provider/provider.dart';
+import '../providers/booking_provider.dart';
 
 class CalendaScreen extends StatefulWidget {
   const CalendaScreen({super.key});
@@ -402,39 +404,52 @@ class _CalendaScreenState extends State<CalendaScreen> {
                       ],
                     ),
                   ),
+
                   ElevatedButton(
                     onPressed: _selectedTimeSlot != null
                         ? () {
+                            // 1. Calculate and format selected date string
+                            final DateTime selectedDate = DateTime.now().add(Duration(days: _selectedDateIndex));
+                            final String formattedDate = '${_formatWeekday(selectedDate)}, ${selectedDate.day} ${_formatMonth(selectedDate)}';
+
+                            // 2. Dispatch new booking to state via Provider
+                            Provider.of<BookingProvider>(context, listen: false).addBooking(
+                              service: _selectedService,
+                              date: formattedDate,
+                              time: _selectedTimeSlot!,
+                              arena: 'Main Arena',
+                            );
+
+                            // 3. Show confirmation feedback
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(
-                                  'Booked $_selectedService at $_selectedTimeSlot!',
-                                ),
+                                content: Text('Successfully booked $_selectedService for $_selectedTimeSlot!'),
                                 backgroundColor: AppColors.primaryOrange,
                               ),
                             );
+
+                            // 4. Reset selection state
+                            setState(() {
+                              _selectedTimeSlot = null;
+                            });
                           }
                         : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryOrange,
-                      disabledBackgroundColor:
-                          AppColors.textSecondary.withValues(alpha: 0.2),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 14,
-                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: const Text(
                       'Confirm Slot',
                       style: TextStyle(
-                        color: Colors.white,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                  ),
+                  )
                 ],
               ),
             ),

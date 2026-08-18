@@ -14,7 +14,7 @@ class _AdminScreenState extends State<AdminScreen> {
   final _notesController = TextEditingController();
 
   String _selectedService = 'Arena Hire';
-  String _selectedTime = '10:00 AM';
+  final String _selectedTime = '10:00 AM';
   bool _isSlotBlocked = false;
 
   final List<String> _services = [

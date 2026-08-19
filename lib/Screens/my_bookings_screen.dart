@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../app_colours.dart';
-import '../models/booking.dart';
 import '../providers/booking_provider.dart';
 
 class MyBookingsScreen extends StatelessWidget {
@@ -11,7 +10,7 @@ class MyBookingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Listen directly to the updated list of bookings from BookingProvider
     final bookingProvider = Provider.of<BookingProvider>(context);
-    final bookings = bookingProvider.bookings;
+    final bookings = bookingProvider.userBookings;
 
     return Scaffold(
       backgroundColor: AppColors.background,

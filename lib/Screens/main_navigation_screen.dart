@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import '../app_colours.dart';
 import 'home_screen.dart';
-import 'calenda_screen.dart';
 import 'my_bookings_screen.dart';
 import 'notifications_screen.dart';
 import 'profile_screen.dart';
-
+import 'booking_categories_screen.dart';
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
 
@@ -17,12 +16,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
   // The 5 Core Tabs from the Project Blueprint
-  final List<Widget> _screens = const [
-    HomeScreenContent(), // Reusable dashboard content
-    CalendaScreen(),      // 📅 Bookings
-    MyBookingsScreen(),   // 📆 My Bookings
-    NotificationsScreen(),// 📢 Notifications
-    ProfileScreen(),      // 👤 Profile
+  // Update your screen list:
+  final List<Widget> _screens = [
+    const HomeScreen(),
+    const BookingCategoriesScreen(), // <--- Replace old booking screen here!
+    const MyBookingsScreen(),
+    const NotificationsScreen(),
+    const ProfileScreen(),
   ];
 
   @override

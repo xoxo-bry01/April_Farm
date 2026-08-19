@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../app_colours.dart';
 import 'package:provider/provider.dart';
+import '../app_colours.dart';
+import '../models/booking.dart';
 import '../providers/booking_provider.dart';
 
 class CalendaScreen extends StatefulWidget {
@@ -404,8 +405,8 @@ class _CalendaScreenState extends State<CalendaScreen> {
                       ],
                     ),
                   ),
-
-                  ElevatedButton(
+                  
+                 ElevatedButton(
                     onPressed: _selectedTimeSlot != null
                         ? () {
                             // 1. Calculate and format selected date string
@@ -413,12 +414,16 @@ class _CalendaScreenState extends State<CalendaScreen> {
                             final String formattedDate = '${_formatWeekday(selectedDate)}, ${selectedDate.day} ${_formatMonth(selectedDate)}';
 
                             // 2. Dispatch new booking to state via Provider
-                            Provider.of<BookingProvider>(context, listen: false).addBooking(
-                              service: _selectedService,
-                              date: formattedDate,
-                              time: _selectedTimeSlot!,
-                              arena: 'Main Arena',
-                            );
+                          Provider.of<BookingProvider>(context, listen: false).addBooking(
+                            Booking(
+                              id: DateTime.now().millisecondsSinceEpoch.toString(),
+                              serviceName: _selectedService,
+                              customerName: 'Bryanna',
+                              date: selectedDate,
+                              status: 'Confirmed',
+                              isManualEntry: false,
+                            ),
+                          );
 
                             // 3. Show confirmation feedback
                             ScaffoldMessenger.of(context).showSnackBar(

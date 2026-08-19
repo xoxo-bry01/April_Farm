@@ -197,7 +197,7 @@ class _AdminScreenState extends State<AdminScreen> {
                   _buildDashboardCard(
                     icon: Icons.block,
                     label: 'Block Times',
-                    backgroundColor: Colors.red.withOpacity(0.2),
+                    backgroundColor: Colors.red.withValues(alpha: 0.2),
                     textColor: Colors.redAccent,
                     iconColor: Colors.redAccent,
                     onTap: () => _showAddBookingDialog(context, isBlock: true),

@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
 import 'app_colours.dart';
 import 'providers/booking_provider.dart';
 import 'Screens/main_navigation_screen.dart';
 import 'Screens/admin.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Supabase with your project details
+  await Supabase.initialize(
+    url: 'https://pouiyfsuoedfwyqysmqy.supabase.co', // e.g. https://xyzcompany.supabase.co
+    publishableKey: 'sb_publishable_R7eN8lUM56AcVl_fvdUM5Q_KB_ezAr3', // Your publishable key
+  );
+
   runApp(
     MultiProvider(
       providers: [

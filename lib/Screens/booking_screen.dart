@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../app_colours.dart';
+import '../models/booking.dart';
+import '../providers/booking_provider.dart';
 
 class BookingScreen extends StatefulWidget {
-  final String? initialCategory; // Can pass 'sessions' or 'events' directly
-
+  final String? initialCategory;
   const BookingScreen({super.key, this.initialCategory});
 
   @override
@@ -12,9 +14,6 @@ class BookingScreen extends StatefulWidget {
 }
 
 class _BookingScreenState extends State<BookingScreen> {
-  // 'landing' = Shows "What are you booking today?"
-  // 'sessions' = Shows Session options
-  // 'events' = Shows Event options
   String currentView = 'landing';
 
   @override
@@ -25,7 +24,6 @@ class _BookingScreenState extends State<BookingScreen> {
     }
   }
 
-  // Data mapping directly aligned with Supabase categories
   final List<Map<String, String>> sessionOptions = const [
     {
       'title': 'Clinics',
@@ -99,7 +97,6 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  // First View: "What are you booking today?" landing screen
   Widget _buildLandingView() {
     return Padding(
       padding: const EdgeInsets.all(20.0),
@@ -120,8 +117,6 @@ class _BookingScreenState extends State<BookingScreen> {
             style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 24),
-
-          // Option 1: Sessions Row
           _buildCategoryCard(
             title: 'Sessions',
             subtitle: 'Clinics, Private Lessons & Arena Hire',
@@ -132,10 +127,7 @@ class _BookingScreenState extends State<BookingScreen> {
               });
             },
           ),
-
           const SizedBox(height: 16),
-
-          // Option 2: Events Row
           _buildCategoryCard(
             title: 'Events',
             subtitle: 'Group Lessons & Youngstars Events',
@@ -151,7 +143,6 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  // Category Selection Card
   Widget _buildCategoryCard({
     required String title,
     required String subtitle,
@@ -212,7 +203,6 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  // Detailed List View (Clinics, Private Lessons, etc.)
   Widget _buildServiceList(
     List<Map<String, String>> items, {
     required bool isEvent,
@@ -306,111 +296,91 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  // Popup Modal Bottom Sheet
   void _openBookingSheet(String title, bool isEvent) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.cardSurface,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(24),
-          height: 350,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Select Date & Time for $title',
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: FutureBuilder<List<Map<String, dynamic>>>(
-                  future: isEvent
-                      ? fetchAvailableEvents()
-                      : fetchAvailableSessions(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          'No available slots found.',
-                          style: TextStyle(color: AppColors.textSecondary),
-                        ),
-                      );
-                    }
-
-                    final slots = snapshot.data!;
-                    return ListView.builder(
-                      itemCount: slots.length,
-                      itemBuilder: (context, i) {
-                        final slot = slots[i];
-                        return ListTile(
-                          title: Text(
-                            '${slot['Date'] ?? 'Date TBD'} (${slot['StarTime'] ?? slot['StartTime'] ?? ''})',
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          trailing: ElevatedButton(
-                            onPressed: () => _confirmBooking(
-                              id: isEvent ? slot['EventID'] : slot['SessionID'],
-                              isEvent: isEvent,
-                            ),
-                            child: const Text('Confirm'),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+        return _BookingSheetContent(
+          title: title,
+          isEvent: isEvent,
+          onConfirm: (selectedDate, slotId) {
+            Navigator.pop(context); // Close bottom sheet immediately
+            _confirmBooking(
+              id: slotId,
+              title: title,
+              isEvent: isEvent,
+              selectedDate: selectedDate,
+            );
+          },
         );
       },
     );
   }
 
-  // Fetch sessions from tblSession
-  Future<List<Map<String, dynamic>>> fetchAvailableSessions() async {
-    final response = await Supabase.instance.client
-        .from('tblSession')
-        .select('*');
-    return List<Map<String, dynamic>>.from(response);
-  }
-
-  // Fetch events from tblEvent
-  Future<List<Map<String, dynamic>>> fetchAvailableEvents() async {
-    final response = await Supabase.instance.client
-        .from('tblEvent')
-        .select('*');
-    return List<Map<String, dynamic>>.from(response);
-  }
-
-  // Insert reservation directly into tblBooking
   Future<void> _confirmBooking({
-    required String id,
+    required String? id,
+    required String title,
     required bool isEvent,
+    required DateTime selectedDate,
   }) async {
     try {
-      await Supabase.instance.client.from('tblBooking').insert({
-        if (!isEvent) 'SessionID': id,
-        if (isEvent) 'EventID': id,
+      final client = Supabase.instance.client;
+      final authUser = client.auth.currentUser;
+
+      if (authUser == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please log in to make a booking.')),
+        );
+        return;
+      }
+      String userId = authUser.id;
+
+      // 1. Ensure user exists in tblUser with ONLY UserID
+      final userCheck = await client
+          .from('tblUser')
+          .select('UserID')
+          .eq('UserID', userId)
+          .maybeSingle();
+
+      if (userCheck == null) {
+        await client.from('tblUser').insert({'UserID': userId});
+      }
+
+      final dateStr = selectedDate.toIso8601String().split('T').first;
+
+      // 2. Insert record into tblBooking
+      final bookingData = <String, dynamic>{
+        'UserID': userId,
         'NumberOfPeople': 1,
         'Status': 'Confirmed',
-      });
+        'ConfirmedDate': dateStr,
+      };
+
+      if (id != null) {
+        if (!isEvent) bookingData['SessionID'] = id;
+        if (isEvent) bookingData['EventID'] = id;
+      }
+
+      await client.from('tblBooking').insert(bookingData);
 
       if (!mounted) return;
-      Navigator.pop(context); // Close bottom sheet
+
+      // 3. Sync local provider for MyBookingsScreen
+      Provider.of<BookingProvider>(context, listen: false).addCustomerBooking(
+        Booking(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          serviceName: title,
+          customerName: 'Bryanna',
+          date: selectedDate,
+          status: 'Confirmed',
+        ),
+      );
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Booking successfully created!')),
       );
@@ -420,5 +390,168 @@ class _BookingScreenState extends State<BookingScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text('Error booking: $e')));
     }
+  }
+}
+
+// Interactive Date & Time Picker Sheet Widget
+class _BookingSheetContent extends StatefulWidget {
+  final String title;
+  final bool isEvent;
+  final Function(DateTime date, String? slotId) onConfirm;
+
+  const _BookingSheetContent({
+    required this.title,
+    required this.isEvent,
+    required this.onConfirm,
+  });
+
+  @override
+  State<_BookingSheetContent> createState() => _BookingSheetContentState();
+}
+
+class _BookingSheetContentState extends State<_BookingSheetContent> {
+  DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
+  TimeOfDay selectedTime = const TimeOfDay(hour: 10, minute: 0);
+
+  @override
+  Widget build(BuildContext context) {
+    final formattedDate =
+        "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}";
+    final formattedTime = selectedTime.format(context);
+
+    return Padding(
+      padding: EdgeInsets.only(
+        top: 24,
+        left: 24,
+        right: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Select Date & Time for ${widget.title}',
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Interactive Date Picker
+          InkWell(
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: selectedDate,
+                firstDate: DateTime.now(),
+                lastDate: DateTime.now().add(const Duration(days: 365)),
+              );
+              if (picked != null) {
+                setState(() => selectedDate = picked);
+              }
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Date: $formattedDate',
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const Icon(
+                    Icons.calendar_today,
+                    color: AppColors.primaryOrange,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Interactive Time Picker
+          InkWell(
+            onTap: () async {
+              final picked = await showTimePicker(
+                context: context,
+                initialTime: selectedTime,
+              );
+              if (picked != null) {
+                setState(() => selectedTime = picked);
+              }
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Time: $formattedTime',
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const Icon(
+                    Icons.access_time,
+                    color: AppColors.primaryOrange,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Confirm Button
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: () {
+                final fullDateTime = DateTime(
+                  selectedDate.year,
+                  selectedDate.month,
+                  selectedDate.day,
+                  selectedTime.hour,
+                  selectedTime.minute,
+                );
+                widget.onConfirm(fullDateTime, null);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryOrange,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Confirm Booking',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

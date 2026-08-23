@@ -4,7 +4,8 @@ import 'home_screen.dart';
 import 'my_bookings_screen.dart';
 import 'notifications_screen.dart';
 import 'profile_screen.dart';
-import 'booking_categories_screen.dart';
+import 'booking_screen.dart'; // Updated to import Supabase BookingScreen
+
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
 
@@ -15,11 +16,10 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
-  // The 5 Core Tabs from the Project Blueprint
-  // Update your screen list:
+  // Connected to Supabase BookingScreen at tab index 1
   final List<Widget> _screens = [
     const HomeScreen(),
-    const BookingCategoriesScreen(), // <--- Replace old booking screen here!
+    const BookingScreen(), // Replaced BookingCategoriesScreen
     const MyBookingsScreen(),
     const NotificationsScreen(),
     const ProfileScreen(),
@@ -37,11 +37,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             _currentIndex = index;
           });
         },
-        type: BottomNavigationBarType.fixed, // Needed for 4+ items
+        type: BottomNavigationBarType.fixed,
         backgroundColor: AppColors.cardSurface,
         selectedItemColor: AppColors.primaryOrange,
         unselectedItemColor: AppColors.textSecondary,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+        selectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 11,
+        ),
         unselectedLabelStyle: const TextStyle(fontSize: 11),
         items: const [
           BottomNavigationBarItem(

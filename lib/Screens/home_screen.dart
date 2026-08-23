@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../app_colours.dart';
-import 'booking_categories_screen.dart';
+import 'booking_screen.dart'; // Updated import
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -14,7 +14,7 @@ class HomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Welcome back, Bryanna 👋',
+              'Welcome back 👋',
               style: TextStyle(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.bold,
@@ -24,10 +24,7 @@ class HomeScreen extends StatelessWidget {
             SizedBox(height: 2),
             Text(
               'April Farm Equestrian Centre',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
             ),
           ],
         ),
@@ -35,7 +32,10 @@ class HomeScreen extends StatelessWidget {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none, color: AppColors.textPrimary),
+            icon: const Icon(
+              Icons.notifications_none,
+              color: AppColors.textPrimary,
+            ),
             onPressed: () {},
           ),
         ],
@@ -76,10 +76,7 @@ class HomeScreen extends StatelessWidget {
                       const SizedBox(height: 6),
                       const Text(
                         'Book guest trainer slots before they fill up!',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                       const SizedBox(height: 12),
                       ElevatedButton(
@@ -87,7 +84,9 @@ class HomeScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const BookingCategoriesScreen(),
+                              builder: (context) => const BookingScreen(
+                                initialCategory: 'sessions',
+                              ),
                             ),
                           );
                         },
@@ -96,11 +95,17 @@ class HomeScreen extends StatelessWidget {
                           foregroundColor: AppColors.primaryOrange,
                           elevation: 0,
                           shape: const StadiumBorder(),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                         ),
                         child: const Text(
                           'Explore Clinics',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ],
@@ -111,7 +116,6 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-
           // 2. Quick Action Grid
           Row(
             children: [
@@ -125,7 +129,7 @@ class HomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const BookingCategoriesScreen(),
+                        builder: (context) => const BookingScreen(),
                       ),
                     );
                   },
@@ -144,7 +148,6 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-
           // 3. Active Booking Widget
           const Text(
             'Upcoming Booking',
@@ -160,9 +163,7 @@ class HomeScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.cardSurface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
             ),
             child: Row(
               children: [
@@ -201,13 +202,16 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textSecondary),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: AppColors.textSecondary,
+                ),
               ],
             ),
           ),
           const SizedBox(height: 20),
-
-          // 4. Offers & Facility Status Carousel Title
+          // 4. Offers & Facility Status
           const Text(
             'Yard Announcements & Offers',
             style: TextStyle(
@@ -222,13 +226,14 @@ class HomeScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.cardSurface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
             ),
             child: const Row(
               children: [
-                Icon(Icons.local_offer_outlined, color: AppColors.primaryOrange),
+                Icon(
+                  Icons.local_offer_outlined,
+                  color: AppColors.primaryOrange,
+                ),
                 SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -261,9 +266,7 @@ class HomeScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.cardSurface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.08),
-          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

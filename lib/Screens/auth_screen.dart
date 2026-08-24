@@ -17,6 +17,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   bool isSignUp = false;
   bool isLoading = false;
+  bool isPasswordVisible = false;
 
   Future<void> _handleAuth() async {
     final email = _emailController.text.trim();
@@ -33,7 +34,6 @@ class _AuthScreenState extends State<AuthScreen> {
       final supabase = Supabase.instance.client;
 
       if (isSignUp) {
-        // 1. Sign Up in Supabase Auth
         final response = await supabase.auth.signUp(
           email: email,
           password: password,
@@ -41,7 +41,6 @@ class _AuthScreenState extends State<AuthScreen> {
 
         final user = response.user;
         if (user != null) {
-          // 2. Insert user details into tblUser
           await supabase.from('tblUser').insert({
             'UserID': user.id,
             'FirstName': _firstNameController.text.trim(),
@@ -51,7 +50,6 @@ class _AuthScreenState extends State<AuthScreen> {
         }
         _showSnackBar('Account created successfully!');
       } else {
-        // Sign In
         await supabase.auth.signInWithPassword(
           email: email,
           password: password,
@@ -136,11 +134,26 @@ class _AuthScreenState extends State<AuthScreen> {
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 16),
+
+                // Password Field with Toggle Eye
                 _buildTextField(
                   controller: _passwordController,
                   label: 'Password',
                   icon: Icons.lock_outline,
-                  obscureText: true,
+                  obscureText: !isPasswordVisible,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        isPasswordVisible = !isPasswordVisible;
+                      });
+                    },
+                  ),
                 ),
                 const SizedBox(height: 24),
 
@@ -204,6 +217,7 @@ class _AuthScreenState extends State<AuthScreen> {
     required String label,
     required IconData icon,
     bool obscureText = false,
+    Widget? suffixIcon,
     TextInputType keyboardType = TextInputType.text,
   }) {
     return TextField(
@@ -215,6 +229,7 @@ class _AuthScreenState extends State<AuthScreen> {
         labelText: label,
         labelStyle: const TextStyle(color: AppColors.textSecondary),
         prefixIcon: Icon(icon, color: AppColors.primaryOrange),
+        suffixIcon: suffixIcon,
         filled: true,
         fillColor: AppColors.cardSurface,
         border: OutlineInputBorder(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../app_colours.dart';
 import '../models/booking.dart';
 import '../providers/booking_provider.dart';
@@ -12,7 +13,25 @@ class AdminScreen extends StatefulWidget {
 }
 
 class _AdminScreenState extends State<AdminScreen> {
-  // Step 3 Dialog: Routes Blocks to Activity & Manual Bookings to Schedule
+  final _supabase = Supabase.instance.client;
+
+  // Real-time counter for Today's Bookings
+  Future<int> _fetchTodaysBookingsCount() async {
+    try {
+      final todayStr = DateTime.now().toIso8601String().split('T')[0];
+      final response = await _supabase
+          .from('tblBooking')
+          .select('BookingID')
+          .gte('BookingDate', '$todayStr 00:00:00')
+          .lte('BookingDate', '$todayStr 23:59:59');
+      return (response as List).length;
+    } catch (e) {
+      debugPrint('Error fetching today bookings: $e');
+      return 0;
+    }
+  }
+
+  // Dialog 1: Add Booking / Block Arena Slot
   void _showAddBookingDialog(BuildContext context, {bool isBlock = false}) {
     final nameController = TextEditingController();
     String selectedService = 'Private Lesson';
@@ -32,7 +51,9 @@ class _AdminScreenState extends State<AdminScreen> {
               controller: nameController,
               style: const TextStyle(color: AppColors.textPrimary),
               decoration: InputDecoration(
-                hintText: isBlock ? 'Reason (e.g. Maintenance)' : 'Rider / Customer Name',
+                hintText: isBlock
+                    ? 'Reason (e.g. Maintenance)'
+                    : 'Rider / Customer Name',
                 hintStyle: const TextStyle(color: AppColors.textSecondary),
                 filled: true,
                 fillColor: AppColors.background,
@@ -57,9 +78,18 @@ class _AdminScreenState extends State<AdminScreen> {
                   ),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 'Private Lesson', child: Text('Private Lesson')),
-                  DropdownMenuItem(value: 'Group Lesson', child: Text('Group Lesson')),
-                  DropdownMenuItem(value: 'Arena Hire', child: Text('Arena Hire')),
+                  DropdownMenuItem(
+                    value: 'Private Lesson',
+                    child: Text('Private Lesson'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Group Lesson',
+                    child: Text('Group Lesson'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Arena Hire',
+                    child: Text('Arena Hire'),
+                  ),
                   DropdownMenuItem(value: 'Clinic', child: Text('Clinic')),
                 ],
                 onChanged: (val) {
@@ -71,19 +101,25 @@ class _AdminScreenState extends State<AdminScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryOrange),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryOrange,
+            ),
             onPressed: () {
               if (nameController.text.trim().isNotEmpty) {
-                final provider = Provider.of<BookingProvider>(context, listen: false);
+                final provider = Provider.of<BookingProvider>(
+                  context,
+                  listen: false,
+                );
 
                 if (isBlock) {
-                  // Step 3: Adds to Admin Activity feed ONLY (Does NOT appear in My Bookings)
                   provider.addAdminBlock(nameController.text.trim());
                 } else {
-                  // Step 3: Adds a manual booking to customer list
                   provider.addCustomerBooking(
                     Booking(
                       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -97,9 +133,12 @@ class _AdminScreenState extends State<AdminScreen> {
                 }
 
                 Navigator.pop(ctx);
+                setState(() {}); // Refresh dashboard
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(isBlock ? 'Arena slot blocked!' : 'Booking added!'),
+                    content: Text(
+                      isBlock ? 'Arena slot blocked!' : 'Booking added!',
+                    ),
                     backgroundColor: AppColors.primaryOrange,
                   ),
                 );
@@ -112,10 +151,258 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 
+  // Dialog 2: Manage Invoices
+  void _showInvoicesDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardSurface,
+        title: const Text(
+          'Recent Invoices',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(
+                  Icons.receipt,
+                  color: AppColors.primaryOrange,
+                ),
+                title: const Text(
+                  'INV-2026-001',
+                  style: TextStyle(color: AppColors.textPrimary),
+                ),
+                subtitle: const Text(
+                  'Arena Hire - Paid',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+                trailing: const Text(
+                  '£35.00',
+                  style: TextStyle(
+                    color: AppColors.primaryOrange,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.receipt,
+                  color: AppColors.primaryOrange,
+                ),
+                title: const Text(
+                  'INV-2026-002',
+                  style: TextStyle(color: AppColors.textPrimary),
+                ),
+                subtitle: const Text(
+                  'Private Lesson - Pending',
+                  style: TextStyle(color: Colors.amber),
+                ),
+                trailing: const Text(
+                  '£50.00',
+                  style: TextStyle(
+                    color: AppColors.primaryOrange,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Close',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Dialog 3: Send Broadcast Notification
+  void _showNotificationDialog(BuildContext context) {
+    final titleController = TextEditingController();
+    final messageController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardSurface,
+        title: const Text(
+          'Broadcast Announcement',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              style: const TextStyle(color: AppColors.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Title (e.g. Arena Maintenance)',
+                hintStyle: const TextStyle(color: AppColors.textSecondary),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: messageController,
+              maxLines: 3,
+              style: const TextStyle(color: AppColors.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Message details...',
+                hintStyle: const TextStyle(color: AppColors.textSecondary),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryOrange,
+            ),
+            onPressed: () {
+              if (messageController.text.trim().isNotEmpty) {
+                Provider.of<BookingProvider>(
+                  context,
+                  listen: false,
+                ).addAdminActivity(
+                  'Announcement Sent: ${titleController.text}',
+                );
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Notification sent to all users!'),
+                    backgroundColor: AppColors.primaryOrange,
+                  ),
+                );
+              }
+            },
+            child: const Text(
+              'Send Broadcast',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Dialog 4: Create Offers
+  void _showOffersDialog(BuildContext context) {
+    final codeController = TextEditingController();
+    final discountController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardSurface,
+        title: const Text(
+          'Create Promo Code',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: codeController,
+              style: const TextStyle(color: AppColors.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Promo Code (e.g. SUMMER10)',
+                hintStyle: const TextStyle(color: AppColors.textSecondary),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: discountController,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: AppColors.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Discount % (e.g. 10)',
+                hintStyle: const TextStyle(color: AppColors.textSecondary),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryOrange,
+            ),
+            onPressed: () {
+              if (codeController.text.trim().isNotEmpty) {
+                Provider.of<BookingProvider>(
+                  context,
+                  listen: false,
+                ).addAdminActivity(
+                  'Created Promo Code: ${codeController.text.toUpperCase()}',
+                );
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Offer ${codeController.text.toUpperCase()} created!',
+                    ),
+                    backgroundColor: AppColors.primaryOrange,
+                  ),
+                );
+              }
+            },
+            child: const Text(
+              'Create Offer',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bookingProvider = Provider.of<BookingProvider>(context);
-    final allBookings = bookingProvider.allBookings;
     final activities = bookingProvider.adminActivities;
 
     return Scaffold(
@@ -124,6 +411,14 @@ class _AdminScreenState extends State<AdminScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: AppColors.primaryOrange),
+            onPressed: () async {
+              await _supabase.auth.signOut();
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -150,40 +445,47 @@ class _AdminScreenState extends State<AdminScreen> {
                 mainAxisSpacing: 12,
                 childAspectRatio: 1.0,
                 children: [
-                  // 1. Today's Bookings Count Card
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFF9500), Color(0xFFFF5E00)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Today's Bookings",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                  // 1. Today's Bookings Count Card (Live Supabase Query)
+                  FutureBuilder<int>(
+                    future: _fetchTodaysBookingsCount(),
+                    builder: (context, snapshot) {
+                      final count =
+                          snapshot.data ?? bookingProvider.allBookings.length;
+                      return Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFF9500), Color(0xFFFF5E00)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${allBookings.length}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Today's Bookings",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '$count',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
 
                   // 2. Add Booking
@@ -207,21 +509,21 @@ class _AdminScreenState extends State<AdminScreen> {
                   _buildDashboardCard(
                     icon: Icons.receipt_long_outlined,
                     label: 'Manage Invoices',
-                    onTap: () {},
+                    onTap: () => _showInvoicesDialog(context),
                   ),
 
                   // 5. Send Notifications
                   _buildDashboardCard(
                     icon: Icons.notifications_none_outlined,
                     label: 'Send Notifications',
-                    onTap: () {},
+                    onTap: () => _showNotificationDialog(context),
                   ),
 
                   // 6. Create Offers
                   _buildDashboardCard(
                     icon: Icons.local_offer_outlined,
                     label: 'Create Offers',
-                    onTap: () {},
+                    onTap: () => _showOffersDialog(context),
                   ),
                 ],
               ),

@@ -6,22 +6,23 @@ import '../models/booking.dart';
 class BookingProvider extends ChangeNotifier {
   List<Booking> _userBookings = [];
   List<String> _adminActivities = [];
-  
+
   // App-Wide System Notifications List
   final List<Map<String, String>> _notifications = [
     {
       'title': 'Arena Maintenance',
-      'message': 'Main arena closed today between 2 PM - 4 PM for surface harrowing.',
-      'date': 'Today'
+      'message':
+          'Main arena closed today between 2 PM - 4 PM for surface harrowing.',
+      'date': 'Today',
     },
     {
       'title': 'New Offers Live',
       'message': 'Check out summer block booking discounts on private lessons!',
-      'date': 'Yesterday'
-    }
+      'date': 'Yesterday',
+    },
   ];
 
-  List<Booking> get userBookings => 
+  List<Booking> get userBookings =>
       _userBookings.where((b) => b.status != 'Blocked').toList();
 
   List<Booking> get allBookings => _userBookings;
@@ -48,16 +49,18 @@ class BookingProvider extends ChangeNotifier {
       final List<dynamic> decoded = jsonDecode(encodedBookings);
       _userBookings = decoded.map((item) => Booking.fromMap(item)).toList();
     }
-    _adminActivities = prefs.getStringList('april_farm_activities') ?? [
-      'Invoice #2024-007 paid',
-      'Notification broadcast sent to all riders',
-    ];
+    _adminActivities =
+        prefs.getStringList('april_farm_activities') ??
+        ['Invoice #2024-007 paid', 'Notification broadcast sent to all riders'];
     notifyListeners();
   }
 
   void addCustomerBooking(Booking booking) {
     _userBookings.add(booking);
-    _adminActivities.insert(0, 'New booking: ${booking.serviceName} (${booking.customerName})');
+    _adminActivities.insert(
+      0,
+      'New booking: ${booking.serviceName} (${booking.customerName})',
+    );
     _saveToStorage();
     notifyListeners();
   }
@@ -67,13 +70,21 @@ class BookingProvider extends ChangeNotifier {
     // 1. Post to Notifications Screen for customers
     _notifications.insert(0, {
       'title': 'Arena Slot Unavailable',
-      'message': 'Notice: Arena blocked for "$reason". Please select alternative available time slots.',
-      'date': 'Just Now'
+      'message':
+          'Notice: Arena blocked for "$reason". Please select alternative available time slots.',
+      'date': 'Just Now',
     });
 
     // 2. Log in Admin Recent Activity
     _adminActivities.insert(0, 'Broadcast Alert: Blocked slot for "$reason"');
-    
+
+    _saveToStorage();
+    notifyListeners();
+  }
+
+  // Helper method for logging custom admin activities (Offers, Broadcasts, etc.)
+  void addAdminActivity(String activity) {
+    _adminActivities.insert(0, activity);
     _saveToStorage();
     notifyListeners();
   }

@@ -5,6 +5,7 @@ import 'app_colours.dart';
 import 'providers/booking_provider.dart';
 import 'Screens/main_navigation_screen.dart';
 import 'Screens/auth_screen.dart';
+import 'Screens/admin_navigation_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +40,26 @@ class MyApp extends StatelessWidget {
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
+  Future<Widget> _getDestinationScreen(String userId) async {
+    // Replace this string with the exact Admin UserTypeID from your tblUserType table
+    const adminUserTypeId = '76acea62-0282-4d95-9df3-42dba48f1102';
+
+    try {
+      final response = await Supabase.instance.client
+          .from('tblUser')
+          .select('UserTypeID')
+          .eq('UserID', userId)
+          .maybeSingle();
+
+      if (response != null && response['UserTypeID'] == adminUserTypeId) {
+        return const AdminNavigationScreen();
+      }
+    } catch (e) {
+      debugPrint('Error fetching user role: $e');
+    }
+    return const MainNavigationScreen();
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<AuthState>(
@@ -46,12 +67,24 @@ class AuthGate extends StatelessWidget {
       builder: (context, snapshot) {
         final session = snapshot.data?.session;
 
-        // If logged in, send to the main app
         if (session != null) {
-          return const MainNavigationScreen();
+          return FutureBuilder<Widget>(
+            future: _getDestinationScreen(session.user.id),
+            builder: (context, roleSnapshot) {
+              if (roleSnapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primaryOrange,
+                    ),
+                  ),
+                );
+              }
+              return roleSnapshot.data ?? const MainNavigationScreen();
+            },
+          );
         }
 
-        // If not logged in, render the login/signup UI
         return const AuthScreen();
       },
     );

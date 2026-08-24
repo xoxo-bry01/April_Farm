@@ -7,7 +7,8 @@ class AdminProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = Supabase.instance.client.auth.currentUser;
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -21,130 +22,85 @@ class AdminProfileScreen extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        automaticallyImplyLeading: false,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Admin Account Card
+              const SizedBox(height: 20),
+              const CircleAvatar(
+                radius: 48,
+                backgroundColor: AppColors.primaryOrange,
+                child: Icon(Icons.person, size: 50, color: Colors.white),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Admin User',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                user?.email ?? 'admin@aprilfarm.com',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 32),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppColors.cardSurface,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Row(
+                child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: AppColors.primaryOrange.withOpacity(0.2),
-                      child: const Icon(
-                        Icons.admin_panel_settings,
-                        color: AppColors.primaryOrange,
-                        size: 32,
-                      ),
+                    _buildProfileTile(
+                      icon: Icons.badge_outlined,
+                      title: 'Role',
+                      subtitle: 'Administrator',
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Farm Administrator',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            user?.email ?? 'admin@aprilfarm.com',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
+                    const Divider(color: AppColors.background, height: 24),
+                    _buildProfileTile(
+                      icon: Icons.email_outlined,
+                      title: 'Email',
+                      subtitle: user?.email ?? 'Not available',
+                    ),
+                    const Divider(color: AppColors.background, height: 24),
+                    _buildProfileTile(
+                      icon: Icons.verified_user_outlined,
+                      title: 'Account Status',
+                      subtitle: 'Active',
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Farm Operating Details
-              const Text(
-                'Business Settings',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              _buildSettingTile(
-                icon: Icons.store,
-                title: 'Facility Name',
-                subtitle: 'April Farm Equestrian Centre',
-                onTap: () {},
-              ),
-              _buildSettingTile(
-                icon: Icons.access_time,
-                title: 'Operating Hours',
-                subtitle: 'Mon - Sun: 08:00 AM - 08:00 PM',
-                onTap: () {},
-              ),
-              _buildSettingTile(
-                icon: Icons.phone_outlined,
-                title: 'Emergency Contact',
-                subtitle: '+44 7700 900123',
-                onTap: () {},
-              ),
-
-              const SizedBox(height: 24),
-              const Text(
-                'Account Actions',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Sign Out Tile
-              InkWell(
-                onTap: () async {
-                  await Supabase.instance.client.auth.signOut();
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.redAccent.withOpacity(0.3),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.withOpacity(0.15),
+                    foregroundColor: Colors.redAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    elevation: 0,
                   ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.logout, color: Colors.redAccent),
-                      SizedBox(width: 16),
-                      Text(
-                        'Log Out',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.redAccent,
-                        ),
-                      ),
-                    ],
+                  icon: const Icon(Icons.logout),
+                  label: const Text(
+                    'Sign Out',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
+                  onPressed: () async {
+                    await supabase.auth.signOut();
+                  },
                 ),
               ),
             ],
@@ -154,39 +110,37 @@ class AdminProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingTile({
+  Widget _buildProfileTile({
     required IconData icon,
     required String title,
     required String subtitle,
-    required VoidCallback onTap,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AppColors.cardSurface,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        leading: Icon(icon, color: AppColors.primaryOrange),
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
+    return Row(
+      children: [
+        Icon(icon, color: AppColors.primaryOrange, size: 24),
+        const SizedBox(width: 16),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
         ),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-        ),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          color: AppColors.textSecondary,
-          size: 14,
-        ),
-      ),
+      ],
     );
   }
 }

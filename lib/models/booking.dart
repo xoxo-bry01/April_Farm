@@ -1,4 +1,5 @@
-// lib/models/booking.dart
+import 'package:flutter/material.dart';
+
 class Booking {
   final String id;
   final String serviceName;
@@ -6,35 +7,45 @@ class Booking {
   final DateTime date;
   final String status;
   final bool isManualEntry;
+  final String specialNotes;
 
   Booking({
     required this.id,
     required this.serviceName,
     required this.customerName,
     required this.date,
-    required this.status,
+    this.status = 'Paid',
     this.isManualEntry = false,
+    this.specialNotes = '',
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'serviceName': serviceName,
-      'customerName': customerName,
-      'date': date.toIso8601String(),
-      'status': status,
-      'isManualEntry': isManualEntry,
-    };
+  // Factory constructor to convert Supabase JSON data safely
+  factory Booking.fromJson(Map<String, dynamic> json) {
+    return Booking(
+      id:
+          json['id']?.toString() ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
+      serviceName: json['service_name'] ?? 'Lesson',
+      customerName: json['customer_name'] ?? 'Rider',
+      date: json['booking_date'] != null
+          ? DateTime.parse(json['booking_date'])
+          : DateTime.now(),
+      status: json['status'] ?? 'Paid',
+      isManualEntry: json['is_manual_entry'] ?? false,
+      specialNotes: json['special_notes'] ?? '',
+    );
   }
 
-  factory Booking.fromMap(Map<String, dynamic> map) {
-    return Booking(
-      id: map['id'],
-      serviceName: map['serviceName'],
-      customerName: map['customerName'],
-      date: DateTime.parse(map['date']),
-      status: map['status'],
-      isManualEntry: map['isManualEntry'] ?? false,
-    );
+  // Method to convert a Booking instance into a Map for Supabase inserts
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'service_name': serviceName,
+      'customer_name': customerName,
+      'booking_date': date.toIso8601String(),
+      'status': status,
+      'is_manual_entry': isManualEntry,
+      'special_notes': specialNotes,
+    };
   }
 }

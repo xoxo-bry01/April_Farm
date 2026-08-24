@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../app_colours.dart';
 import 'admin.dart';
 import 'admin_profile_screen.dart';
+import 'arena_diary_screen.dart';
 
 class AdminNavigationScreen extends StatefulWidget {
   const AdminNavigationScreen({super.key});
@@ -13,28 +14,25 @@ class AdminNavigationScreen extends StatefulWidget {
 class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const AdminScreen(),
-    const Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: Text(
-          'Arena Diary Calendar Coming Next',
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 18),
-        ),
-      ),
-    ),
-    const AdminProfileScreen(),
-  ];
+  void _onTabSelected(int index) {
+    setState(() => _currentIndex = index);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: _screens[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          AdminScreen(onNavigateToDiary: () => _onTabSelected(1)),
+          const ArenaDiaryScreen(),
+          const AdminProfileScreen(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: _onTabSelected,
         backgroundColor: AppColors.cardSurface,
         selectedItemColor: AppColors.primaryOrange,
         unselectedItemColor: AppColors.textSecondary,

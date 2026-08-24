@@ -6,7 +6,9 @@ import '../models/booking.dart';
 import '../providers/booking_provider.dart';
 
 class AdminScreen extends StatefulWidget {
-  const AdminScreen({super.key});
+  final VoidCallback? onNavigateToDiary;
+
+  const AdminScreen({super.key, this.onNavigateToDiary});
 
   @override
   State<AdminScreen> createState() => _AdminScreenState();
@@ -15,143 +17,390 @@ class AdminScreen extends StatefulWidget {
 class _AdminScreenState extends State<AdminScreen> {
   final _supabase = Supabase.instance.client;
 
-  // Real-time counter for Today's Bookings
-  Future<int> _fetchTodaysBookingsCount() async {
-    try {
-      final todayStr = DateTime.now().toIso8601String().split('T')[0];
-      final response = await _supabase
-          .from('tblBooking')
-          .select('BookingID')
-          .gte('BookingDate', '$todayStr 00:00:00')
-          .lte('BookingDate', '$todayStr 23:59:59');
-      return (response as List).length;
-    } catch (e) {
-      debugPrint('Error fetching today bookings: $e');
-      return 0;
-    }
-  }
-
-  // Dialog 1: Add Booking / Block Arena Slot
+  // Full Feature Booking Dialog (Date, Time, Duration, Horse Name, Payment, Notes)
   void _showAddBookingDialog(BuildContext context, {bool isBlock = false}) {
     final nameController = TextEditingController();
+    final horseController = TextEditingController();
+    final notesController = TextEditingController();
+
+    DateTime selectedDate = DateTime.now();
+    TimeOfDay selectedTime = TimeOfDay.now();
     String selectedService = 'Private Lesson';
+    String duration = '45 min';
+    String paymentStatus = 'Paid';
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.cardSurface,
-        title: Text(
-          isBlock ? 'Block Arena Slot' : 'Add Admin Booking',
-          style: const TextStyle(color: AppColors.textPrimary),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: InputDecoration(
-                hintText: isBlock
-                    ? 'Reason (e.g. Maintenance)'
-                    : 'Rider / Customer Name',
-                hintStyle: const TextStyle(color: AppColors.textSecondary),
-                filled: true,
-                fillColor: AppColors.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-              ),
+      isScrollControlled: true,
+      backgroundColor: AppColors.cardSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+              top: 24,
+              left: 20,
+              right: 20,
             ),
-            const SizedBox(height: 12),
-            if (!isBlock)
-              DropdownButtonFormField<String>(
-                value: selectedService,
-                dropdownColor: AppColors.cardSurface,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: AppColors.background,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        isBlock
+                            ? 'Block Arena Slot'
+                            : 'Create Complete Booking',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          color: AppColors.textSecondary,
+                        ),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
                   ),
-                ),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'Private Lesson',
-                    child: Text('Private Lesson'),
+                  const SizedBox(height: 16),
+
+                  // Rider Name Field
+                  TextField(
+                    controller: nameController,
+                    style: const TextStyle(color: AppColors.textPrimary),
+                    decoration: InputDecoration(
+                      labelText: isBlock ? 'Reason' : 'Rider / Customer Name',
+                      labelStyle: const TextStyle(
+                        color: AppColors.textSecondary,
+                      ),
+                      filled: true,
+                      fillColor: AppColors.background,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
                   ),
-                  DropdownMenuItem(
-                    value: 'Group Lesson',
-                    child: Text('Group Lesson'),
+                  const SizedBox(height: 12),
+
+                  if (!isBlock) ...[
+                    // Horse Name Field
+                    TextField(
+                      controller: horseController,
+                      style: const TextStyle(color: AppColors.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'Horse Name (e.g. Dusty)',
+                        labelStyle: const TextStyle(
+                          color: AppColors.textSecondary,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Date & Time Pickers
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: selectedDate,
+                                firstDate: DateTime(2025),
+                                lastDate: DateTime(2030),
+                              );
+                              if (picked != null) {
+                                setModalState(() => selectedDate = picked);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: AppColors.background,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.calendar_today,
+                                    color: AppColors.primaryOrange,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final picked = await showTimePicker(
+                                context: context,
+                                initialTime: selectedTime,
+                              );
+                              if (picked != null) {
+                                setModalState(() => selectedTime = picked);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: AppColors.background,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.access_time,
+                                    color: AppColors.primaryOrange,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    selectedTime.format(context),
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Service Dropdown
+                    DropdownButtonFormField<String>(
+                      value: selectedService,
+                      dropdownColor: AppColors.cardSurface,
+                      style: const TextStyle(color: AppColors.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'Service Category',
+                        labelStyle: const TextStyle(
+                          color: AppColors.textSecondary,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'Private Lesson',
+                          child: Text('Private Lesson'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Group Lesson',
+                          child: Text('Group Lesson'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Arena Hire',
+                          child: Text('Arena Hire'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Clinic / Bodywork',
+                          child: Text('Clinic / Bodywork'),
+                        ),
+                      ],
+                      onChanged: (val) {
+                        if (val != null)
+                          setModalState(() => selectedService = val);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Duration & Payment Status
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            value: duration,
+                            dropdownColor: AppColors.cardSurface,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Duration',
+                              labelStyle: const TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
+                              filled: true,
+                              fillColor: AppColors.background,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                            items: ['30 min', '45 min', '60 min', '90 min']
+                                .map(
+                                  (d) => DropdownMenuItem(
+                                    value: d,
+                                    child: Text(d),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) {
+                              if (val != null)
+                                setModalState(() => duration = val);
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            value: paymentStatus,
+                            dropdownColor: AppColors.cardSurface,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Payment Status',
+                              labelStyle: const TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
+                              filled: true,
+                              fillColor: AppColors.background,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                            items: ['Paid', 'Pending', 'Pay on Arrival']
+                                .map(
+                                  (p) => DropdownMenuItem(
+                                    value: p,
+                                    child: Text(p),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setModalState(() => paymentStatus = val);
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Notes Area
+                    TextField(
+                      controller: notesController,
+                      maxLines: 2,
+                      style: const TextStyle(color: AppColors.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'Special Notes / Requirements',
+                        labelStyle: const TextStyle(
+                          color: AppColors.textSecondary,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryOrange,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        if (nameController.text.trim().isNotEmpty) {
+                          final provider = Provider.of<BookingProvider>(
+                            context,
+                            listen: false,
+                          );
+
+                          final formattedTime = selectedTime.format(context);
+                          final fullService = isBlock
+                              ? 'BLOCKED'
+                              : '$selectedService ($formattedTime, $duration)';
+                          final horse = horseController.text.trim();
+
+                          provider.addCustomerBooking(
+                            Booking(
+                              id: DateTime.now().millisecondsSinceEpoch
+                                  .toString(),
+                              serviceName: fullService,
+                              customerName: horse.isEmpty
+                                  ? nameController.text.trim()
+                                  : '${nameController.text.trim()} ($horse)',
+                              date: selectedDate,
+                              status: paymentStatus,
+                              isManualEntry: true,
+                            ),
+                          );
+
+                          Navigator.pop(ctx);
+                          setState(() {});
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isBlock ? 'Slot Blocked!' : 'Booking Saved!',
+                              ),
+                              backgroundColor: AppColors.primaryOrange,
+                            ),
+                          );
+                        }
+                      },
+                      child: const Text(
+                        'Save Booking Details',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
-                  DropdownMenuItem(
-                    value: 'Arena Hire',
-                    child: Text('Arena Hire'),
-                  ),
-                  DropdownMenuItem(value: 'Clinic', child: Text('Clinic')),
                 ],
-                onChanged: (val) {
-                  if (val != null) selectedService = val;
-                },
               ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: AppColors.textSecondary),
             ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryOrange,
-            ),
-            onPressed: () {
-              if (nameController.text.trim().isNotEmpty) {
-                final provider = Provider.of<BookingProvider>(
-                  context,
-                  listen: false,
-                );
-
-                if (isBlock) {
-                  provider.addAdminBlock(nameController.text.trim());
-                } else {
-                  provider.addCustomerBooking(
-                    Booking(
-                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      serviceName: selectedService,
-                      customerName: nameController.text.trim(),
-                      date: DateTime.now(),
-                      status: 'Confirmed',
-                      isManualEntry: true,
-                    ),
-                  );
-                }
-
-                Navigator.pop(ctx);
-                setState(() {}); // Refresh dashboard
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      isBlock ? 'Arena slot blocked!' : 'Booking added!',
-                    ),
-                    backgroundColor: AppColors.primaryOrange,
-                  ),
-                );
-              }
-            },
-            child: const Text('Save', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
-  // Dialog 2: Manage Invoices
   void _showInvoicesDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -161,25 +410,22 @@ class _AdminScreenState extends State<AdminScreen> {
           'Recent Invoices',
           style: TextStyle(color: AppColors.textPrimary),
         ),
-        content: SizedBox(
+        content: const SizedBox(
           width: double.maxFinite,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(
-                  Icons.receipt,
-                  color: AppColors.primaryOrange,
-                ),
-                title: const Text(
+                leading: Icon(Icons.receipt, color: AppColors.primaryOrange),
+                title: Text(
                   'INV-2026-001',
                   style: TextStyle(color: AppColors.textPrimary),
                 ),
-                subtitle: const Text(
+                subtitle: Text(
                   'Arena Hire - Paid',
                   style: TextStyle(color: AppColors.textSecondary),
                 ),
-                trailing: const Text(
+                trailing: Text(
                   '£35.00',
                   style: TextStyle(
                     color: AppColors.primaryOrange,
@@ -188,19 +434,16 @@ class _AdminScreenState extends State<AdminScreen> {
                 ),
               ),
               ListTile(
-                leading: const Icon(
-                  Icons.receipt,
-                  color: AppColors.primaryOrange,
-                ),
-                title: const Text(
+                leading: Icon(Icons.receipt, color: AppColors.primaryOrange),
+                title: Text(
                   'INV-2026-002',
                   style: TextStyle(color: AppColors.textPrimary),
                 ),
-                subtitle: const Text(
+                subtitle: Text(
                   'Private Lesson - Pending',
                   style: TextStyle(color: Colors.amber),
                 ),
-                trailing: const Text(
+                trailing: Text(
                   '£50.00',
                   style: TextStyle(
                     color: AppColors.primaryOrange,
@@ -224,7 +467,6 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 
-  // Dialog 3: Send Broadcast Notification
   void _showNotificationDialog(BuildContext context) {
     final titleController = TextEditingController();
     final messageController = TextEditingController();
@@ -311,7 +553,6 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 
-  // Dialog 4: Create Offers
   void _showOffersDialog(BuildContext context) {
     final codeController = TextEditingController();
     final discountController = TextEditingController();
@@ -405,6 +646,14 @@ class _AdminScreenState extends State<AdminScreen> {
     final bookingProvider = Provider.of<BookingProvider>(context);
     final activities = bookingProvider.adminActivities;
 
+    // Filter today's count directly from provider to keep dashboard and diary in sync
+    final today = DateTime.now();
+    final todayCount = bookingProvider.allBookings.where((b) {
+      return b.date.year == today.year &&
+          b.date.month == today.month &&
+          b.date.day == today.day;
+    }).length;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -435,8 +684,6 @@ class _AdminScreenState extends State<AdminScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Action Cards Grid
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -445,81 +692,63 @@ class _AdminScreenState extends State<AdminScreen> {
                 mainAxisSpacing: 12,
                 childAspectRatio: 1.0,
                 children: [
-                  // 1. Today's Bookings Count Card (Live Supabase Query)
-                  FutureBuilder<int>(
-                    future: _fetchTodaysBookingsCount(),
-                    builder: (context, snapshot) {
-                      final count =
-                          snapshot.data ?? bookingProvider.allBookings.length;
-                      return Container(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFF9500), Color(0xFFFF5E00)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF9500), Color(0xFFFF5E00)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Today's Bookings",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
                           ),
-                          borderRadius: BorderRadius.circular(16),
                         ),
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Today's Bookings",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '$count',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                        const SizedBox(height: 8),
+                        Text(
+                          '$todayCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      );
-                    },
+                      ],
+                    ),
                   ),
-
-                  // 2. Add Booking
                   _buildDashboardCard(
                     icon: Icons.add_box_outlined,
                     label: 'Add Booking',
                     onTap: () => _showAddBookingDialog(context, isBlock: false),
                   ),
-
-                  // 3. Block Times
                   _buildDashboardCard(
                     icon: Icons.block,
                     label: 'Block Times',
-                    backgroundColor: Colors.red.withValues(alpha: 0.2),
+                    backgroundColor: Colors.red.withOpacity(0.2),
                     textColor: Colors.redAccent,
                     iconColor: Colors.redAccent,
                     onTap: () => _showAddBookingDialog(context, isBlock: true),
                   ),
-
-                  // 4. Manage Invoices
                   _buildDashboardCard(
                     icon: Icons.receipt_long_outlined,
                     label: 'Manage Invoices',
                     onTap: () => _showInvoicesDialog(context),
                   ),
-
-                  // 5. Send Notifications
                   _buildDashboardCard(
                     icon: Icons.notifications_none_outlined,
                     label: 'Send Notifications',
                     onTap: () => _showNotificationDialog(context),
                   ),
-
-                  // 6. Create Offers
                   _buildDashboardCard(
                     icon: Icons.local_offer_outlined,
                     label: 'Create Offers',
@@ -528,51 +757,50 @@ class _AdminScreenState extends State<AdminScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-
-              // Arena Diary Header Card
-              Container(
-                width: double.infinity,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppColors.cardSurface,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: double.infinity,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primaryOrange,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          bottomLeft: Radius.circular(16),
+              GestureDetector(
+                onTap: widget.onNavigateToDiary ?? () {},
+                child: Container(
+                  width: double.infinity,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: AppColors.cardSurface,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 80,
+                        height: double.infinity,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primaryOrange,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(16),
+                            bottomLeft: Radius.circular(16),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.calendar_month,
+                          color: Colors.white,
+                          size: 32,
                         ),
                       ),
-                      child: const Icon(
-                        Icons.calendar_month,
-                        color: Colors.white,
-                        size: 32,
-                      ),
-                    ),
-                    const Expanded(
-                      child: Center(
-                        child: Text(
-                          'Arena Diary',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                      const Expanded(
+                        child: Center(
+                          child: Text(
+                            'Arena Diary',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Recent Activity Feed
               const Text(
                 'Recent Activity',
                 style: TextStyle(
@@ -582,7 +810,6 @@ class _AdminScreenState extends State<AdminScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-
               activities.isEmpty
                   ? Container(
                       width: double.infinity,

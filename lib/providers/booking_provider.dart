@@ -1,97 +1,113 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/booking.dart';
 
 class BookingProvider extends ChangeNotifier {
-  List<Booking> _userBookings = [];
-  List<String> _adminActivities = [];
+  final List<Booking> _allBookings = [];
+  final List<String> _adminActivities = [];
+  final List<String> _notifications = [];
 
-  // App-Wide System Notifications List
-  final List<Map<String, String>> _notifications = [
-    {
-      'title': 'Arena Maintenance',
-      'message':
-          'Main arena closed today between 2 PM - 4 PM for surface harrowing.',
-      'date': 'Today',
-    },
-    {
-      'title': 'New Offers Live',
-      'message': 'Check out summer block booking discounts on private lessons!',
-      'date': 'Yesterday',
-    },
-  ];
+  // Current logged in customer name
+  String _currentUserName = 'Bryanna Sonebong';
 
-  List<Booking> get userBookings =>
-      _userBookings.where((b) => b.status != 'Blocked').toList();
+  // Getters
+  List<Booking> get allBookings => List.unmodifiable(_allBookings);
 
-  List<Booking> get allBookings => _userBookings;
-  List<String> get adminActivities => _adminActivities;
-  List<Map<String, String>> get notifications => _notifications;
+  // FILTERED: Customers ONLY see bookings matching their own name
+  List<Booking> get userBookings {
+    return List.unmodifiable(
+      _allBookings.where((b) => b.customerName == _currentUserName).toList(),
+    );
+  }
+
+  List<String> get adminActivities => List.unmodifiable(_adminActivities);
+  List<String> get notifications => List.unmodifiable(_notifications);
 
   BookingProvider() {
-    loadDataFromStorage();
+    _fetchInitialBookings();
   }
 
-  Future<void> _saveToStorage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String encodedBookings = jsonEncode(
-      _userBookings.map((b) => b.toMap()).toList(),
-    );
-    await prefs.setString('april_farm_bookings', encodedBookings);
-    await prefs.setStringList('april_farm_activities', _adminActivities);
-  }
-
-  Future<void> loadDataFromStorage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? encodedBookings = prefs.getString('april_farm_bookings');
-    if (encodedBookings != null) {
-      final List<dynamic> decoded = jsonDecode(encodedBookings);
-      _userBookings = decoded.map((item) => Booking.fromMap(item)).toList();
-    }
-    _adminActivities =
-        prefs.getStringList('april_farm_activities') ??
-        ['Invoice #2024-007 paid', 'Notification broadcast sent to all riders'];
+  void setCurrentUser(String name) {
+    _currentUserName = name;
     notifyListeners();
   }
 
-  void addCustomerBooking(Booking booking) {
-    _userBookings.add(booking);
+  Future<void> _fetchInitialBookings() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('tblBooking')
+          .select();
+
+      final List<dynamic> data = response as List<dynamic>;
+      _allBookings.clear();
+
+      for (var row in data) {
+        _allBookings.add(
+          Booking(
+            id:
+                row['id']?.toString() ??
+                DateTime.now().millisecondsSinceEpoch.toString(),
+            serviceName: row['service_name'] ?? 'Lesson',
+            customerName: row['customer_name'] ?? 'Rider',
+            date: row['booking_date'] != null
+                ? DateTime.parse(row['booking_date'])
+                : DateTime.now(),
+            status: row['status'] ?? 'Paid',
+            isManualEntry: row['is_manual_entry'] ?? false,
+            specialNotes: row['special_notes'] ?? '',
+          ),
+        );
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error fetching initial bookings from Supabase: $e');
+    }
+  }
+
+  Future<void> addCustomerBooking(Booking booking) async {
+    _allBookings.add(booking);
     _adminActivities.insert(
       0,
-      'New booking: ${booking.serviceName} (${booking.customerName})',
+      'New booking added: ${booking.serviceName} for ${booking.customerName}',
     );
-    _saveToStorage();
+    _notifications.insert(
+      0,
+      'Booking confirmed: ${booking.serviceName} on ${booking.date.day}/${booking.date.month}',
+    );
     notifyListeners();
+
+    try {
+      await Supabase.instance.client.from('tblBooking').insert({
+        'id': booking.id,
+        'customer_name': booking.customerName,
+        'service_name': booking.serviceName,
+        'booking_date': booking.date.toIso8601String(),
+        'status': booking.status,
+        'is_manual_entry': booking.isManualEntry,
+        'special_notes': booking.specialNotes,
+      });
+    } catch (e) {
+      debugPrint('Error writing booking to Supabase: $e');
+    }
   }
 
-  // Admin Blocks Time & Broadcasts Notification to Users
-  void addAdminBlock(String reason) {
-    // 1. Post to Notifications Screen for customers
-    _notifications.insert(0, {
-      'title': 'Arena Slot Unavailable',
-      'message':
-          'Notice: Arena blocked for "$reason". Please select alternative available time slots.',
-      'date': 'Just Now',
-    });
-
-    // 2. Log in Admin Recent Activity
-    _adminActivities.insert(0, 'Broadcast Alert: Blocked slot for "$reason"');
-
-    _saveToStorage();
+  Future<void> cancelBooking(String bookingId) async {
+    _allBookings.removeWhere((b) => b.id == bookingId);
+    _notifications.insert(0, 'Booking cancelled');
     notifyListeners();
+
+    try {
+      await Supabase.instance.client
+          .from('tblBooking')
+          .delete()
+          .eq('id', bookingId);
+    } catch (e) {
+      debugPrint('Error deleting booking from Supabase: $e');
+    }
   }
 
-  // Helper method for logging custom admin activities (Offers, Broadcasts, etc.)
   void addAdminActivity(String activity) {
     _adminActivities.insert(0, activity);
-    _saveToStorage();
-    notifyListeners();
-  }
-
-  void cancelBooking(String bookingId) {
-    _userBookings.removeWhere((b) => b.id == bookingId);
-    _saveToStorage();
     notifyListeners();
   }
 }

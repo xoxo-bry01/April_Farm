@@ -3,9 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app_colours.dart';
 import 'providers/booking_provider.dart';
-import 'Screens/main_navigation_screen.dart';
-import 'Screens/auth_screen.dart';
-import 'Screens/admin_navigation_screen.dart';
+import 'screens/auth/splash_screen.dart';
+import 'screens/main_navigation_screen.dart';
+import 'screens/admin/admin_navigation_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,7 +41,6 @@ class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
   Future<Widget> _getDestinationScreen(String userId) async {
-    // Replace this string with the exact Admin UserTypeID from your tblUserType table
     const adminUserTypeId = '76acea62-0282-4d95-9df3-42dba48f1102';
 
     try {
@@ -85,7 +84,7 @@ class AuthGate extends StatelessWidget {
           );
         }
 
-        return const AuthScreen();
+        return const SplashScreen();
       },
     );
   }

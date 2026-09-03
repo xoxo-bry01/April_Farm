@@ -1,86 +1,103 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/booking.dart';
 
 class BookingProvider extends ChangeNotifier {
-  List<Booking> _userBookings = [];
-  List<String> _adminActivities = [];
-  
-  // App-Wide System Notifications List
-  final List<Map<String, String>> _notifications = [
-    {
-      'title': 'Arena Maintenance',
-      'message': 'Main arena closed today between 2 PM - 4 PM for surface harrowing.',
-      'date': 'Today'
-    },
-    {
-      'title': 'New Offers Live',
-      'message': 'Check out summer block booking discounts on private lessons!',
-      'date': 'Yesterday'
-    }
-  ];
+  // Store all bookings
+  final List<Booking> _allBookings = [];
 
-  List<Booking> get userBookings => 
-      _userBookings.where((b) => b.status != 'Blocked').toList();
+  // Store blocked dates set by admin
+  final List<DateTime> _blockedDates = [];
 
-  List<Booking> get allBookings => _userBookings;
-  List<String> get adminActivities => _adminActivities;
-  List<Map<String, String>> get notifications => _notifications;
+  // Store admin activity logs
+  final List<String> _adminActivities = ['System initialized'];
 
-  BookingProvider() {
-    loadDataFromStorage();
+  // Store notifications
+  final List<String> _notifications = ['Welcome to April Farm!'];
+
+  // Primary customer name for current user session
+  final String _currentCustomerName = 'Bryanna Sonebong';
+
+  // Getters
+  List<Booking> get allBookings => List.unmodifiable(_allBookings);
+  List<DateTime> get blockedDates => List.unmodifiable(_blockedDates);
+  List<String> get adminActivities => List.unmodifiable(_adminActivities);
+  List<String> get notifications => List.unmodifiable(_notifications);
+
+  // Alias getters to clear errors in my_bookings_screen & role_selection_screen
+  List<Booking> get userBookings => getCustomerBookings(_currentCustomerName);
+
+  // Customer specific bookings (Filtered by user identity)
+  List<Booking> getCustomerBookings(String customerName) {
+    return _allBookings
+        .where((booking) => booking.customerName == customerName)
+        .toList();
   }
 
-  Future<void> _saveToStorage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String encodedBookings = jsonEncode(
-      _userBookings.map((b) => b.toMap()).toList(),
-    );
-    await prefs.setString('april_farm_bookings', encodedBookings);
-    await prefs.setStringList('april_farm_activities', _adminActivities);
-  }
-
-  Future<void> loadDataFromStorage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? encodedBookings = prefs.getString('april_farm_bookings');
-    if (encodedBookings != null) {
-      final List<dynamic> decoded = jsonDecode(encodedBookings);
-      _userBookings = decoded.map((item) => Booking.fromMap(item)).toList();
-    }
-    _adminActivities = prefs.getStringList('april_farm_activities') ?? [
-      'Invoice #2024-007 paid',
-      'Notification broadcast sent to all riders',
-    ];
+  // Add customer booking
+  void addCustomerBooking(Booking newBooking) {
+    _allBookings.add(newBooking);
+    addAdminActivity('New booking created: ${newBooking.serviceName}');
+    addNotification('Booking confirmed for ${newBooking.serviceName}');
     notifyListeners();
   }
 
-  void addCustomerBooking(Booking booking) {
-    _userBookings.add(booking);
-    _adminActivities.insert(0, 'New booking: ${booking.serviceName} (${booking.customerName})');
-    _saveToStorage();
-    notifyListeners();
-  }
-
-  // Admin Blocks Time & Broadcasts Notification to Users
-  void addAdminBlock(String reason) {
-    // 1. Post to Notifications Screen for customers
-    _notifications.insert(0, {
-      'title': 'Arena Slot Unavailable',
-      'message': 'Notice: Arena blocked for "$reason". Please select alternative available time slots.',
-      'date': 'Just Now'
-    });
-
-    // 2. Log in Admin Recent Activity
-    _adminActivities.insert(0, 'Broadcast Alert: Blocked slot for "$reason"');
-    
-    _saveToStorage();
-    notifyListeners();
-  }
-
+  // Cancel booking method to clear error in my_bookings_screen
   void cancelBooking(String bookingId) {
-    _userBookings.removeWhere((b) => b.id == bookingId);
-    _saveToStorage();
+    _allBookings.removeWhere((booking) => booking.id == bookingId);
+    addAdminActivity('Booking cancelled ID: $bookingId');
+    addNotification('A booking was cancelled.');
+    notifyListeners();
+  }
+
+  // Notification helper methods
+  void addNotification(String message) {
+    _notifications.insert(0, message);
+    notifyListeners();
+  }
+
+  // Admin activity log method
+  void addAdminActivity(String activity) {
+    _adminActivities.insert(0, activity);
+    notifyListeners();
+  }
+
+  // Check if a specific date is blocked
+  bool isDateBlocked(DateTime date) {
+    return _blockedDates.any(
+      (blockedDate) =>
+          blockedDate.year == date.year &&
+          blockedDate.month == date.month &&
+          blockedDate.day == date.day,
+    );
+  }
+
+  // Method for admin to block a new date
+  void blockDate(DateTime date) {
+    if (!isDateBlocked(date)) {
+      _blockedDates.add(date);
+      addAdminActivity('Blocked date: ${date.day}/${date.month}/${date.year}');
+      addNotification(
+        'Date ${date.day}/${date.month} has been blocked for maintenance.',
+      );
+      notifyListeners();
+    }
+  }
+
+  // Method for admin to unblock a date
+  void unblockDate(DateTime date) {
+    _blockedDates.removeWhere(
+      (blockedDate) =>
+          blockedDate.year == date.year &&
+          blockedDate.month == date.month &&
+          blockedDate.day == date.day,
+    );
+    addAdminActivity('Unblocked date: ${date.day}/${date.month}/${date.year}');
+    notifyListeners();
+  }
+
+  // Clear all notifications
+  void clearNotifications() {
+    _notifications.clear();
     notifyListeners();
   }
 }

@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
-import '../app_colours.dart';
-import 'home/home_screen.dart';
-import 'booking/booking_service_screen.dart';
+import '../../app_colours.dart';
+import 'admin_home/admin_dashboard_screen.dart';
+import 'admin_offers/offers_screen.dart';
 
-class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
+class AdminNavigationScreen extends StatefulWidget {
+  const AdminNavigationScreen({super.key});
 
   @override
-  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
+  State<AdminNavigationScreen> createState() => _AdminNavigationScreenState();
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
+class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = [
-    const HomeScreen(),
-    const BookingServiceScreen(),
+    const AdminDashboardScreen(),
     const Scaffold(
       backgroundColor: AppColors.background,
       body: Center(
         child: Text(
-          'Bookings Screen Placeholder',
+          'Admin Diary Placeholder',
           style: TextStyle(color: AppColors.textPrimary),
         ),
       ),
@@ -29,20 +28,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       backgroundColor: AppColors.background,
       body: Center(
         child: Text(
-          'Calendar Screen Placeholder',
+          'Livery Management Placeholder',
           style: TextStyle(color: AppColors.textPrimary),
         ),
       ),
     ),
-    const Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: Text(
-          'Profile Screen Placeholder',
-          style: TextStyle(color: AppColors.textPrimary),
-        ),
-      ),
-    ),
+    const AdminOffersScreen(),
   ];
 
   @override
@@ -62,24 +53,24 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
+            icon: Icon(Icons.dashboard_outlined),
+            activeIcon: Icon(Icons.dashboard),
+            label: 'Dashboard',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            activeIcon: Icon(Icons.calendar_today),
-            label: 'Bookings',
+            icon: Icon(Icons.calendar_month_outlined),
+            activeIcon: Icon(Icons.calendar_month),
+            label: 'Diary',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.event_note_outlined),
-            activeIcon: Icon(Icons.event_note),
-            label: 'Calendar',
+            icon: Icon(Icons.pets_outlined),
+            activeIcon: Icon(Icons.pets),
+            label: 'Livery',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
+            icon: Icon(Icons.local_offer_outlined),
+            activeIcon: Icon(Icons.local_offer),
+            label: 'Offers',
           ),
         ],
       ),

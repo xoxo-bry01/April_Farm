@@ -4,8 +4,14 @@ import 'app_colours.dart';
 import 'providers/booking_provider.dart';
 import 'Screens/main_navigation_screen.dart';
 import 'Screens/admin.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+void main() async {
+  await Supabase.initialize(
+    url: 'https://pouiyfsuoedfwyqysmqy.supabase.co',
+    anonKey: 'sb_publishable_R7eN8lUM56AcVl_fvdUM5Q_KB_ezAr3',
+  );
+
   runApp(
     MultiProvider(
       providers: [

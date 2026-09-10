@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class Booking {
   final String id;
   final String serviceName;

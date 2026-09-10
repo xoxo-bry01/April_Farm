@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../app_colours.dart'; // Adjust depth based on folder (../../ or ../../../)
+import '../../app_colours.dart';
 
-class ScreenNamePlaceholder extends StatelessWidget {
-  const ScreenNamePlaceholder({super.key});
+class HelpSupportScreen extends StatelessWidget {
+  const HelpSupportScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -11,19 +11,27 @@ class ScreenNamePlaceholder extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text(
-          'Screen Title',
+          'Help & Support',
           style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
-      body: const Center(
+      body: const Padding(
+        padding: EdgeInsets.all(20.0),
         child: Text(
-          'Dark Theme Screen Ready',
-          style: TextStyle(color: AppColors.textSecondary),
+          'For assistance with bookings or livery, please contact the April Farm main desk.',
+          style: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+            height: 1.4,
+          ),
         ),
       ),
     );

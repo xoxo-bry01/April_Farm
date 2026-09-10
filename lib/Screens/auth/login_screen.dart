@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../app_colours.dart';
+import '../main_navigation_screen.dart';
 import 'register_screen.dart';
-import '../home/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,8 +11,23 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isPasswordObscured = true;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _handleLogin() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,35 +35,35 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Welcome Back!',
-                textAlign: TextAlign.center,
+                'Welcome Back',
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               const Text(
-                'Login to continue',
-                textAlign: TextAlign.center,
+                'Sign in to manage your bookings and profile',
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
               ),
-              const SizedBox(height: 36),
-
-              // Email Input
+              const SizedBox(height: 32),
               TextField(
                 controller: _emailController,
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'Email',
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
+                  labelText: 'Email Address',
+                  labelStyle: const TextStyle(color: AppColors.textSecondary),
+                  prefixIcon: const Icon(
+                    Icons.email_outlined,
+                    color: AppColors.textSecondary,
+                  ),
                   filled: true,
                   fillColor: AppColors.cardSurface,
                   border: OutlineInputBorder(
@@ -58,15 +73,30 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Password Input
               TextField(
                 controller: _passwordController,
-                obscureText: true,
+                obscureText: _isPasswordObscured,
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'Password',
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
+                  labelText: 'Password',
+                  labelStyle: const TextStyle(color: AppColors.textSecondary),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline,
+                    color: AppColors.textSecondary,
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordObscured
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordObscured = !_isPasswordObscured;
+                      });
+                    },
+                  ),
                   filled: true,
                   fillColor: AppColors.cardSurface,
                   border: OutlineInputBorder(
@@ -76,34 +106,28 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Login Button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryOrange,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryOrange,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                ),
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HomeScreen()),
-                  );
-                },
-                child: const Text(
-                  'Login',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  onPressed: _handleLogin,
+                  child: const Text(
+                    'Login',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // Register Link
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -116,12 +140,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const RegisterScreen(),
+                          builder: (_) => const RegisterScreen(),
                         ),
                       );
                     },
                     child: const Text(
-                      'Sign up',
+                      'Sign Up',
                       style: TextStyle(
                         color: AppColors.primaryOrange,
                         fontWeight: FontWeight.bold,

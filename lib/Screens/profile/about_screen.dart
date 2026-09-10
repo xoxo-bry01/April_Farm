@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../app_colours.dart'; // Adjust depth based on folder (../../ or ../../../)
+import '../../app_colours.dart';
 
-class ScreenNamePlaceholder extends StatelessWidget {
-  const ScreenNamePlaceholder({super.key});
+class AboutScreen extends StatelessWidget {
+  const AboutScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -11,19 +11,37 @@ class ScreenNamePlaceholder extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text(
-          'Screen Title',
+          'About April Farm',
           style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
-      body: const Center(
-        child: Text(
-          'Dark Theme Screen Ready',
-          style: TextStyle(color: AppColors.textSecondary),
+      body: const Padding(
+        padding: EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'April Farm Equestrian App',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Version 1.0.0',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            ),
+          ],
         ),
       ),
     );

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../app_colours.dart';
-import '../main_navigation_screen.dart';
+import 'email_verification_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -10,14 +12,26 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final TextEditingController _firstNameController = TextEditingController();
-  final TextEditingController _lastNameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _dobController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _firstNameController =
+      TextEditingController();
+
+  final TextEditingController _lastNameController =
+      TextEditingController();
+
+  final TextEditingController _phoneController =
+      TextEditingController();
+
+  final TextEditingController _dobController =
+      TextEditingController();
+
+  final TextEditingController _emailController =
+      TextEditingController();
+
+  final TextEditingController _passwordController =
+      TextEditingController();
 
   bool _isPasswordObscured = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -54,32 +68,99 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (picked != null) {
       final String day = picked.day.toString().padLeft(2, '0');
       final String month = picked.month.toString().padLeft(2, '0');
+
       setState(() {
-        _dobController.text = "$day/$month/${picked.year}";
+        _dobController.text = '$day/$month/${picked.year}';
       });
     }
   }
 
-  void _handleRegister() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
-      (route) => false,
-    );
+  Future<void> _handleRegister() async {
+    // Check that all fields have been completed
+    if (_firstNameController.text.trim().isEmpty ||
+        _lastNameController.text.trim().isEmpty ||
+        _phoneController.text.trim().isEmpty ||
+        _dobController.text.trim().isEmpty ||
+        _emailController.text.trim().isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all fields.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response =
+          await Supabase.instance.client.auth.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        data: {
+          'first_name': _firstNameController.text.trim(),
+          'surname': _lastNameController.text.trim(),
+          'telephone': _phoneController.text.trim(),
+        },
+      );
+
+      if (!mounted) return;
+
+      if (response.user != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const EmailVerificationScreen(),
+          ),
+        );
+      }
+    } on AuthException catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.message),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Something went wrong. Please try again.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: const Icon(
+            Icons.arrow_back,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -94,11 +175,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+
               const SizedBox(height: 6),
+
               const Text(
                 'Join April Farm to book arenas and manage your schedule',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                ),
               ),
+
               const SizedBox(height: 28),
 
               // First Name & Last Name
@@ -107,18 +194,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Expanded(
                     child: TextField(
                       controller: _firstNameController,
-                      style: const TextStyle(color: AppColors.textPrimary),
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                      ),
                       decoration: _buildInputDecoration(
                         label: 'First Name',
                         icon: Icons.person_outline,
                       ),
                     ),
                   ),
+
                   const SizedBox(width: 12),
+
                   Expanded(
                     child: TextField(
                       controller: _lastNameController,
-                      style: const TextStyle(color: AppColors.textPrimary),
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                      ),
                       decoration: _buildInputDecoration(
                         label: 'Last Name',
                         icon: Icons.person_outline,
@@ -127,18 +220,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ],
               ),
+
               const SizedBox(height: 16),
 
               // Phone Number
               TextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                style: const TextStyle(color: AppColors.textPrimary),
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                ),
                 decoration: _buildInputDecoration(
                   label: 'Phone Number',
                   icon: Icons.phone_outlined,
                 ),
               ),
+
               const SizedBox(height: 16),
 
               // Date of Birth
@@ -146,31 +243,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _dobController,
                 readOnly: true,
                 onTap: () => _selectDateOfBirth(context),
-                style: const TextStyle(color: AppColors.textPrimary),
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                ),
                 decoration: _buildInputDecoration(
                   label: 'Date of Birth',
                   icon: Icons.calendar_today_outlined,
                 ),
               ),
+
               const SizedBox(height: 16),
 
               // Email Address
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                style: const TextStyle(color: AppColors.textPrimary),
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                ),
                 decoration: _buildInputDecoration(
                   label: 'Email Address',
                   icon: Icons.email_outlined,
                 ),
               ),
+
               const SizedBox(height: 16),
 
               // Password
               TextField(
                 controller: _passwordController,
                 obscureText: _isPasswordObscured,
-                style: const TextStyle(color: AppColors.textPrimary),
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                ),
                 decoration: _buildInputDecoration(
                   label: 'Password',
                   icon: Icons.lock_outline,
@@ -183,12 +288,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     onPressed: () {
                       setState(() {
-                        _isPasswordObscured = !_isPasswordObscured;
+                        _isPasswordObscured =
+                            !_isPasswordObscured;
                       });
                     },
                   ),
                 ),
               ),
+
               const SizedBox(height: 28),
 
               // Register Button
@@ -197,20 +304,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryOrange,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: _handleRegister,
-                  child: const Text(
-                    'Register',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  onPressed: _isLoading
+                      ? null
+                      : _handleRegister,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Register',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ],
@@ -227,8 +347,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: AppColors.textSecondary),
-      prefixIcon: Icon(icon, color: AppColors.textSecondary),
+      labelStyle: const TextStyle(
+        color: AppColors.textSecondary,
+      ),
+      prefixIcon: Icon(
+        icon,
+        color: AppColors.textSecondary,
+      ),
       suffixIcon: suffixIcon,
       filled: true,
       fillColor: AppColors.cardSurface,

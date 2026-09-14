@@ -37,7 +37,7 @@ class OfferDetailsScreen extends StatelessWidget {
                   color: AppColors.cardSurface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: AppColors.primaryOrange.withValues(alpha: 0.4),
+                    color: AppColors.primaryOrange.withOpacity(0.4),
                   ),
                 ),
                 child: const Column(

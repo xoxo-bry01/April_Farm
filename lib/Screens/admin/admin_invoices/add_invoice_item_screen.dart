@@ -32,7 +32,7 @@ class AddInvoiceItemScreen extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: 'Item Description',
                 hintStyle: TextStyle(
-                  color: AppColors.textSecondary.withValues(alpha: 0.5),
+                  color: AppColors.textSecondary.withOpacity(0.5),
                 ),
                 filled: true,
                 fillColor: AppColors.cardSurface,
@@ -49,7 +49,7 @@ class AddInvoiceItemScreen extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: 'Price (£)',
                 hintStyle: TextStyle(
-                  color: AppColors.textSecondary.withValues(alpha: 0.5),
+                  color: AppColors.textSecondary.withOpacity(0.5),
                 ),
                 filled: true,
                 fillColor: AppColors.cardSurface,

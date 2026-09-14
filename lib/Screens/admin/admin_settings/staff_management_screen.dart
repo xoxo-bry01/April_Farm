@@ -61,7 +61,7 @@ class StaffManagementScreen extends StatelessWidget {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: AppColors.primaryOrange.withValues(alpha: 0.2),
+            backgroundColor: AppColors.primaryOrange.withOpacity(0.2),
             child: Text(
               name[0],
               style: const TextStyle(

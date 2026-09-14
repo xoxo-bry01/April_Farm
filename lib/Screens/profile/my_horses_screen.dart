@@ -51,7 +51,7 @@ class MyHorsesScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.primaryOrange.withValues(alpha: 0.15),
+              color: AppColors.primaryOrange.withOpacity(0.15),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.pets, color: AppColors.primaryOrange),

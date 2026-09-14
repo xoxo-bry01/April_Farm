@@ -33,7 +33,7 @@ class CustomersScreen extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: 'Search customers...',
                 hintStyle: TextStyle(
-                  color: AppColors.textSecondary.withValues(alpha: 0.5),
+                  color: AppColors.textSecondary.withOpacity(0.5),
                 ),
                 prefixIcon: const Icon(
                   Icons.search,
@@ -105,7 +105,7 @@ class CustomersScreen extends StatelessWidget {
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: AppColors.primaryOrange.withValues(alpha: 0.2),
+              backgroundColor: AppColors.primaryOrange.withOpacity(0.2),
               child: Text(
                 name[0],
                 style: const TextStyle(

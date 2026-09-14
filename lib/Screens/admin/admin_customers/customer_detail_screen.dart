@@ -48,8 +48,8 @@ class CustomerDetailScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 36,
-                    backgroundColor: AppColors.primaryOrange.withValues(
-                      alpha: 0.2,
+                    backgroundColor: AppColors.primaryOrange.withOpacity(
+                      0.2,
                     ),
                     child: Text(
                       name[0],

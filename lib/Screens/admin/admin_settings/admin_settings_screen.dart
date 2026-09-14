@@ -71,7 +71,7 @@ class AdminSettingsScreen extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: AppColors.primaryOrange.withValues(alpha: 0.15),
+            color: AppColors.primaryOrange.withOpacity(0.15),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: AppColors.primaryOrange, size: 22),

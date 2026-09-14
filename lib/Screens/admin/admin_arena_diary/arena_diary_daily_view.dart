@@ -43,13 +43,13 @@ class ArenaDiaryDailyView extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isBlocked
-            ? AppColors.cardSurface.withValues(alpha: 0.5)
+            ? AppColors.cardSurface.withOpacity(0.5)
             : AppColors.cardSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isBlocked
               ? Colors.grey.shade800
-              : AppColors.primaryOrange.withValues(alpha: 0.3),
+              : AppColors.primaryOrange.withOpacity(0.3),
         ),
       ),
       child: Row(

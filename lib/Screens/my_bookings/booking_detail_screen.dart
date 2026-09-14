@@ -55,7 +55,7 @@ class BookingDetailScreen extends StatelessWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.2),
+                            color: Colors.green.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Text(

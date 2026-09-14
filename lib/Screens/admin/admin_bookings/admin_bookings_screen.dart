@@ -46,8 +46,8 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
     final filteredBookings = _selectedFilterIndex == 0
         ? _bookings
         : _bookings
-              .where((b) => b['status'] == _filters[_selectedFilterIndex])
-              .toList();
+            .where((b) => b['status'] == _filters[_selectedFilterIndex])
+            .toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -131,8 +131,8 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                     Color statusColor = item['status'] == 'Confirmed'
                         ? Colors.green
                         : item['status'] == 'Pending'
-                        ? Colors.orange
-                        : Colors.redAccent;
+                            ? Colors.orange
+                            : Colors.redAccent;
 
                     return GestureDetector(
                       onTap: () {
@@ -190,7 +190,7 @@ class _AdminBookingsScreenState extends State<AdminBookingsScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: statusColor.withValues(alpha: 0.15),
+                                color: statusColor.withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(

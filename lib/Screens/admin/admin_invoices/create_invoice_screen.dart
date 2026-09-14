@@ -33,7 +33,7 @@ class CreateInvoiceScreen extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: 'Customer Name',
                 hintStyle: TextStyle(
-                  color: AppColors.textSecondary.withValues(alpha: 0.5),
+                  color: AppColors.textSecondary.withOpacity(0.5),
                 ),
                 filled: true,
                 fillColor: AppColors.cardSurface,

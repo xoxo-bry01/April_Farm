@@ -122,7 +122,7 @@ class InvoicesScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: (isPaid ? AppColors.statusGreen : AppColors.statusRed)
-                    .withValues(alpha: 0.15),
+                    .withOpacity(0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(

@@ -176,7 +176,7 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
       decoration: BoxDecoration(
         color: AppColors.cardSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+        border: Border.all(color: statusColor.withOpacity(0.3)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -214,7 +214,7 @@ class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.15),
+              color: statusColor.withOpacity(0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(

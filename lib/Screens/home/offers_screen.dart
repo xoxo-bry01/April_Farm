@@ -73,7 +73,7 @@ class OffersScreen extends StatelessWidget {
           color: AppColors.cardSurface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppColors.primaryOrange.withValues(alpha: 0.3),
+            color: AppColors.primaryOrange.withOpacity(0.3),
           ),
         ),
         child: Row(
@@ -88,7 +88,7 @@ class OffersScreen extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryOrange.withValues(alpha: 0.2),
+                      color: AppColors.primaryOrange.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(

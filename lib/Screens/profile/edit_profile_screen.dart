@@ -9,9 +9,23 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  final _nameController = TextEditingController(text: 'Equestrian User');
-  final _emailController = TextEditingController(text: 'user@example.com');
-  final _phoneController = TextEditingController(text: '+44 7123 456789');
+  final TextEditingController _firstNameController = TextEditingController(
+    text: 'Bryanna',
+  );
+  final TextEditingController _lastNameController = TextEditingController(
+    text: 'Sonebong',
+  );
+  final TextEditingController _phoneController = TextEditingController(
+    text: '+44 7700 900077',
+  );
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,80 +46,104 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            _buildTextField('Full Name', _nameController, Icons.person_outline),
-            const SizedBox(height: 16),
-            _buildTextField(
-              'Email Address',
-              _emailController,
-              Icons.email_outlined,
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              'Phone Number',
-              _phoneController,
-              Icons.phone_outlined,
-            ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryOrange,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'First Name',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
                 ),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text(
-                  'Save Changes',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _firstNameController,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: AppColors.cardSurface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+              const SizedBox(height: 20),
 
-  Widget _buildTextField(
-    String label,
-    TextEditingController controller,
-    IconData icon,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-        ),
-        const SizedBox(height: 6),
-        TextField(
-          controller: controller,
-          style: const TextStyle(color: AppColors.textPrimary),
-          decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: AppColors.textSecondary),
-            filled: true,
-            fillColor: AppColors.cardSurface,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
+              const Text(
+                'Last Name',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _lastNameController,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: AppColors.cardSurface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              const Text(
+                'Phone Number',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: AppColors.cardSurface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const Spacer(),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryOrange,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'Save Changes',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }

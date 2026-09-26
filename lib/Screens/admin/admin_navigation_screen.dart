@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../app_colours.dart';
 import 'admin_home/admin_dashboard_screen.dart';
+import 'admin_arena_diary/arena_diary_screen.dart';
+import 'livery_home/livery_home_screen.dart';
 import 'admin_offers/offers_screen.dart';
 
 class AdminNavigationScreen extends StatefulWidget {
@@ -15,25 +17,9 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
 
   final List<Widget> _pages = [
     const AdminDashboardScreen(),
-    const Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: Text(
-          'Admin Diary Placeholder',
-          style: TextStyle(color: AppColors.textPrimary),
-        ),
-      ),
-    ),
-    const Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: Text(
-          'Livery Management Placeholder',
-          style: TextStyle(color: AppColors.textPrimary),
-        ),
-      ),
-    ),
-    const AdminOffersScreen(),
+    const ArenaDiaryScreen(),
+    const LiveryHomeScreen(),
+    const OffersScreen(),
   ];
 
   @override
@@ -60,7 +46,7 @@ class _AdminNavigationScreenState extends State<AdminNavigationScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_month_outlined),
             activeIcon: Icon(Icons.calendar_month),
-            label: 'Diary',
+            label: 'Arena Diary',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.pets_outlined),

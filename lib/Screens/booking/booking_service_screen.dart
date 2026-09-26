@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../app_colours.dart';
-import 'booking_details_screen.dart';
+import 'service_details_screen.dart';
 
 class BookingServiceScreen extends StatelessWidget {
   const BookingServiceScreen({super.key});
@@ -72,7 +72,12 @@ class BookingServiceScreen extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => BookingDetailsScreen(serviceTitle: title),
+            builder: (context) => ServiceDetailsScreen(
+              serviceTitle: title,
+              price: price,
+              description:
+                  'Enjoy exclusive access to our premier facility at April Farm.',
+            ),
           ),
         );
       },

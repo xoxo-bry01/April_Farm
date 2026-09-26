@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../app_colours.dart';
+import 'booking_confirmation_screen.dart';
 
 class BookingDetailsScreen extends StatefulWidget {
   final String serviceTitle;
@@ -95,13 +96,14 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   ),
                 ),
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Booking confirmed!'),
-                      backgroundColor: AppColors.statusGreen,
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BookingConfirmationScreen(
+                        serviceTitle: widget.serviceTitle,
+                      ),
                     ),
                   );
-                  Navigator.pop(context);
                 },
                 child: const Text(
                   'Confirm Booking',

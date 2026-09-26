@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../app_colours.dart';
 import 'home/home_screen.dart';
-import 'booking/booking_service_screen.dart';
+import 'my_bookings/my_bookings_screen.dart';
+import 'notifications/notifications_screen.dart';
+import 'profile/profile_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -13,53 +15,24 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [
+  final List<Widget> _screens = [
     const HomeScreen(),
-    const BookingServiceScreen(),
-    const Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: Text(
-          'Bookings Screen Placeholder',
-          style: TextStyle(color: AppColors.textPrimary),
-        ),
-      ),
-    ),
-    const Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: Text(
-          'Calendar Screen Placeholder',
-          style: TextStyle(color: AppColors.textPrimary),
-        ),
-      ),
-    ),
-    const Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: Text(
-          'Profile Screen Placeholder',
-          style: TextStyle(color: AppColors.textPrimary),
-        ),
-      ),
-    ),
+    const MyBookingsScreen(),
+    const NotificationsScreen(),
+    const ProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onTap: (index) => setState(() => _currentIndex = index),
+        type: BottomNavigationBarType.fixed,
         backgroundColor: AppColors.cardSurface,
         selectedItemColor: AppColors.primaryOrange,
         unselectedItemColor: AppColors.textSecondary,
-        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
@@ -72,9 +45,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             label: 'Bookings',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.event_note_outlined),
-            activeIcon: Icon(Icons.event_note),
-            label: 'Calendar',
+            icon: Icon(Icons.notifications_outlined),
+            activeIcon: Icon(Icons.notifications),
+            label: 'Notifications',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),

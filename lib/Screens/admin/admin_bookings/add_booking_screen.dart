@@ -1,29 +1,28 @@
 import 'package:flutter/material.dart';
-import '../../app_colours.dart';
+import '../../../app_colours.dart';
 
-class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({super.key});
+class AddBookingScreen extends StatefulWidget {
+  const AddBookingScreen({super.key});
 
   @override
-  State<EditProfileScreen> createState() => _EditProfileScreenState();
+  State<AddBookingScreen> createState() => _AddBookingScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> {
-  final TextEditingController _firstNameController = TextEditingController(
-    text: 'Bryanna',
-  );
-  final TextEditingController _lastNameController = TextEditingController(
-    text: 'Sonebong',
-  );
-  final TextEditingController _phoneController = TextEditingController(
-    text: '+44 7700 900077',
-  );
+class _AddBookingScreenState extends State<AddBookingScreen> {
+  final TextEditingController _riderController = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
+  String _selectedArena = 'Indoor Arena 1';
+
+  final List<String> _arenas = [
+    'Indoor Arena 1',
+    'Outdoor Showjumping Arena',
+    'Dressage Arena',
+  ];
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _phoneController.dispose();
+    _riderController.dispose();
+    _dateController.dispose();
     super.dispose();
   }
 
@@ -39,7 +38,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Edit Profile',
+          'Add Manual Booking',
           style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
@@ -53,7 +52,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'First Name',
+                'Rider Name',
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.bold,
@@ -61,9 +60,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               const SizedBox(height: 8),
               TextField(
-                controller: _firstNameController,
+                controller: _riderController,
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
+                  hintText: 'Enter rider full name',
+                  hintStyle: const TextStyle(color: AppColors.textSecondary),
                   filled: true,
                   fillColor: AppColors.cardSurface,
                   border: OutlineInputBorder(
@@ -75,45 +76,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 20),
 
               const Text(
-                'Last Name',
+                'Facility',
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
-              TextField(
-                controller: _lastNameController,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: AppColors.cardSurface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.cardSurface,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ),
-              const SizedBox(height: 20),
-
-              const Text(
-                'Phone Number',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: AppColors.cardSurface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedArena,
+                    dropdownColor: AppColors.cardSurface,
+                    isExpanded: true,
+                    style: const TextStyle(color: AppColors.textPrimary),
+                    items: _arenas.map((arena) {
+                      return DropdownMenuItem(value: arena, child: Text(arena));
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedArena = val);
+                    },
                   ),
                 ),
               ),
@@ -131,10 +118,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                   onPressed: () => Navigator.pop(context),
                   child: const Text(
-                    'Save Changes',
+                    'Create Booking',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

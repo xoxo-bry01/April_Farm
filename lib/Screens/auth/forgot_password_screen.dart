@@ -7,14 +7,11 @@ class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() =>
-      _ForgotPasswordScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState
-    extends State<ForgotPasswordScreen> {
-  final TextEditingController _emailController =
-      TextEditingController();
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final TextEditingController _emailController = TextEditingController();
 
   bool _isLoading = false;
 
@@ -85,7 +82,6 @@ class _ForgotPasswordScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
@@ -100,7 +96,6 @@ class _ForgotPasswordScreenState
           ),
         ),
       ),
-
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -108,7 +103,6 @@ class _ForgotPasswordScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 30),
-
               const Text(
                 'Reset your password',
                 style: TextStyle(
@@ -117,9 +111,7 @@ class _ForgotPasswordScreenState
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 8),
-
               const Text(
                 'Enter the email address linked to your account and we will send you a link to reset your password.',
                 style: TextStyle(
@@ -127,9 +119,7 @@ class _ForgotPasswordScreenState
                   fontSize: 14,
                 ),
               ),
-
               const SizedBox(height: 30),
-
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -153,9 +143,7 @@ class _ForgotPasswordScreenState
                   ),
                 ),
               ),
-
               const SizedBox(height: 24),
-
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -168,8 +156,7 @@ class _ForgotPasswordScreenState
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed:
-                      _isLoading ? null : _sendResetEmail,
+                  onPressed: _isLoading ? null : _sendResetEmail,
                   child: _isLoading
                       ? const SizedBox(
                           height: 22,

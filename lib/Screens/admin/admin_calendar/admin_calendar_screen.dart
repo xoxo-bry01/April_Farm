@@ -11,7 +11,7 @@ class AdminCalendarScreen extends StatefulWidget {
 }
 
 class _AdminCalendarScreenState extends State<AdminCalendarScreen> {
-  DateTime _selectedDate = DateTime.now();
+  final DateTime _selectedDate = DateTime.now();
 
   @override
   Widget build(BuildContext context) {

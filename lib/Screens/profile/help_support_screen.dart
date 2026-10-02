@@ -51,10 +51,10 @@ class HelpSupportScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Expanded(
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           Text(
                             'Need Direct Help?',
                             style: TextStyle(

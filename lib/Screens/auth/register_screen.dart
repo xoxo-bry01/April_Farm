@@ -12,23 +12,17 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final TextEditingController _firstNameController =
-      TextEditingController();
+  final TextEditingController _firstNameController = TextEditingController();
 
-  final TextEditingController _lastNameController =
-      TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
 
-  final TextEditingController _phoneController =
-      TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
-  final TextEditingController _dobController =
-      TextEditingController();
+  final TextEditingController _dobController = TextEditingController();
 
-  final TextEditingController _emailController =
-      TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
 
-  final TextEditingController _passwordController =
-      TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   bool _isPasswordObscured = true;
   bool _isLoading = false;
@@ -66,11 +60,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
 
     if (picked != null) {
-      final String day = picked.day.toString().padLeft(2, '0');
       final String month = picked.month.toString().padLeft(2, '0');
+      final String day = picked.day.toString().padLeft(2, '0');
 
       setState(() {
-        _dobController.text = '$day/$month/${picked.year}';
+        // Formatted as YYYY-MM-DD for Supabase / Postgres compliance
+        _dobController.text = '${picked.year}-$month-$day';
       });
     }
   }
@@ -96,14 +91,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      final response =
-          await Supabase.instance.client.auth.signUp(
+      final response = await Supabase.instance.client.auth.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
         data: {
           'first_name': _firstNameController.text.trim(),
           'surname': _lastNameController.text.trim(),
           'telephone': _phoneController.text.trim(),
+          'date_of_birth': _dobController.text.trim(),
         },
       );
 
@@ -148,7 +143,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
@@ -160,7 +154,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -203,9 +196,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                   ),
-
                   const SizedBox(width: 12),
-
                   Expanded(
                     child: TextField(
                       controller: _lastNameController,
@@ -288,8 +279,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     onPressed: () {
                       setState(() {
-                        _isPasswordObscured =
-                            !_isPasswordObscured;
+                        _isPasswordObscured = !_isPasswordObscured;
                       });
                     },
                   ),
@@ -311,9 +301,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: _isLoading
-                      ? null
-                      : _handleRegister,
+                  onPressed: _isLoading ? null : _handleRegister,
                   child: _isLoading
                       ? const SizedBox(
                           height: 22,

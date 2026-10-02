@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../app_colours.dart';
 import '../main_navigation_screen.dart';
+import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -13,11 +14,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController =
-      TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
 
-  final TextEditingController _passwordController =
-      TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   bool _isPasswordObscured = true;
   bool _isLoading = false;
@@ -47,8 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final response =
-          await Supabase.instance.client.auth.signInWithPassword(
+      final response = await Supabase.instance.client.auth.signInWithPassword(
         email: email,
         password: password,
       );
@@ -174,8 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     onPressed: () {
                       setState(() {
-                        _isPasswordObscured =
-                            !_isPasswordObscured;
+                        _isPasswordObscured = !_isPasswordObscured;
                       });
                     },
                   ),
@@ -188,7 +185,31 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 8),
+
+              // Forgot Password link
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ForgotPasswordScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Forgot Password?',
+                    style: TextStyle(
+                      color: AppColors.primaryOrange,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
 
               // Login button
               SizedBox(
@@ -203,9 +224,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: _isLoading
-                      ? null
-                      : _handleLogin,
+                  onPressed: _isLoading ? null : _handleLogin,
                   child: _isLoading
                       ? const SizedBox(
                           height: 22,
@@ -238,7 +257,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: AppColors.textSecondary,
                     ),
                   ),
-
                   GestureDetector(
                     onTap: () {
                       Navigator.push(

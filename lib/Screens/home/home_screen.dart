@@ -221,7 +221,19 @@ class HomeScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const BookingDetailScreen(),
+                            builder: (_) => const BookingDetailScreen(
+                              bookingData: {
+                                'id': 'AF-20250521',
+                                'service_name': 'Private Lesson',
+                                'booking_date': '21 May 2025',
+                                'booking_time': '2:00 PM',
+                                'status': 'Confirmed',
+                                'horse_name': 'Thunder',
+                                'instructor': 'Olivia',
+                                'price': '45.00',
+                                'notes': 'Private lesson with Olivia.',
+                              },
+                            ),
                           ),
                         );
                       },

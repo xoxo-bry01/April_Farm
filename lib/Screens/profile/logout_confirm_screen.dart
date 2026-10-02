@@ -1,8 +1,53 @@
 import 'package:flutter/material.dart';
-import '../../app_colours.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class LogoutConfirmScreen extends StatelessWidget {
+import '../../app_colours.dart';
+import '../auth/login_screen.dart';
+
+class LogoutConfirmScreen extends StatefulWidget {
   const LogoutConfirmScreen({super.key});
+
+  @override
+  State<LogoutConfirmScreen> createState() => _LogoutConfirmScreenState();
+}
+
+class _LogoutConfirmScreenState extends State<LogoutConfirmScreen> {
+  bool _isLoading = false;
+
+  Future<void> _handleLogout() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // 1. Sign out from Supabase
+      await Supabase.instance.client.auth.signOut();
+
+      if (!mounted) return;
+
+      // 2. Clear stack and navigate to LoginScreen
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const LoginScreen(),
+        ),
+        (route) => false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to log out. Please try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,18 +119,24 @@ class LogoutConfirmScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () {
-                    // Navigate back to login root screen
-                    Navigator.of(context).popUntil((route) => route.isFirst);
-                  },
-                  child: const Text(
-                    'Yes, Log Out',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  onPressed: _isLoading ? null : _handleLogout,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Yes, Log Out',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 12),
